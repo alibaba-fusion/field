@@ -1,0 +1,6 @@
+demo/**/*
+/index.js
+node_modules
+lib
+build
+

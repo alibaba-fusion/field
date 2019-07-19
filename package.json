@@ -12,7 +12,24 @@
   "scripts": {
     "start": "ice-scripts dev",
     "build": "ice-scripts build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "ice-scripts test",
+    "precommit": "lint-staged",
+    "eslint": "eslint '@(src|test)/**/*.@(js|jsx)'"
+  },
+  "lint-staged": {
+    "@(src|scripts|docs/*/demo)/**/*.@(js|jsx)": [
+      "prettier --write"
+    ],
+    "@(src|scripts|docs/*/demo)/**/*.@(js|jsx|md)": [
+      "eslint",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
   },
   "license": "MIT",
   "keywords": [
@@ -21,14 +38,35 @@
     "component"
   ],
   "dependencies": {
-    "prop-types": "^15.5.8"
+    "@alifd/validate": "^1.0.0",
+    "prop-types": "^15.5.8",
+    "react-dom": "^16.8.6"
   },
   "devDependencies": {
+    "@alifd/eslint-config-next": "^2.0.0",
+    "@alifd/next": "^1.15.12",
+    "@commitlint/cli": "^8.1.0",
+    "babel-eslint": "^10.0.2",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.14.0",
+    "es6-promise-polyfill": "^1.2.0",
+    "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-markdown": "^1.0.0",
+    "eslint-plugin-react": "^7.14.2",
+    "husky": "^3.0.0",
     "ice-plugin-component": "^0.1.1",
     "ice-plugin-fusion": "^0.1.4",
     "ice-scripts": "^2.0.0",
+    "lint-staged": "^9.2.0",
+    "mocha": "^6.1.4",
+    "moment": "^2.24.0",
+    "power-assert": "^1.6.1",
+    "prettier": "^1.18.2",
     "react": "^16.3.0",
-    "react-dom": "^16.3.0"
+    "semantic-release": "^15.13.18",
+    "sinon": "^7.3.2"
   },
   "peerDependencies": {
     "react": "^16.3.0"
@@ -36,6 +74,17 @@
   "componentConfig": {
     "name": "field",
     "title": "Field",
-    "categories": ["表单"]
+    "categories": [
+      "表单"
+    ]
+  },
+  "homepage": "https://github.com/alibaba-fusion/field",
+  "bugs": "https://github.com/alibaba-fusion/field/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alibaba-fusion/field.git"
   }
 }
