@@ -1,7 +1,8 @@
 import assert from 'power-assert';
 import { log } from '../src/utils';
 
-/*global describe it beforeEach*/
+/* eslint-disable no-console */
+/*global describe it beforeEach afterEach */
 describe('src/log.js', function() {
     describe('#deprecated, #warning', function() {
         beforeEach(() => {

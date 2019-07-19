@@ -1,6 +1,7 @@
 import assert from 'power-assert';
 import * as object from '../src/utils/object';
 
+/* eslint-disable no-console */
 /*global describe it beforeEach*/
 describe('src/object.js', function() {
     describe('#typeOf', function() {
