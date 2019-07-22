@@ -190,6 +190,9 @@ Let myfield = new Field(this [,options]);
 | autoUnmount | Automatically delete the Unmout element, if you want to keep the data can be set to false | Boolean |true|
 | autoValidate | Automatically validate while value changed | Boolean  |true|
 | values | initial value| Object ||
+| processErrorMessage | function to transform error objects on validation. Main usage is to add `key` prop to React component | Function(error) ||
+| afterValidateRerender | function to perform any operations after components have rerendered to show validation results. | Function({errorGroup, options, instance}) - see [here](#afterValidateRerender) for more information ||
+
 
 #### API Interface
 The api interface provided by the object after `new` (eg `myfield.getValues()`) (The api function starting with `set` should not be manipulated in render, which may trigger an infinite loop)
@@ -285,6 +288,17 @@ componentWillReceiveProps(nextProps) {
     }
 }
 ```
+
+## <a name="afterValidateRerender"></a> afterValidateRerender
+
+`afterValidateRerender` receives an object with the following properties
+
+|Parameter | Description | Type |
+|-----------|------------------------------------------|------------|-------|--------|
+| errorsGroup | Map of field elements with errors, indexed by name. Access the error by `errorsGroup[field_name].errors` | Object | 
+| options | field's `options` property | Object | 
+| instance | fields's `instance` property, which holds references to React components for the field items | Object | 
+
 
 ## Known Issues
 
