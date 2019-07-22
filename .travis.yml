@@ -1,0 +1,34 @@
+sudo: required
+
+language: node_js
+
+node_js:
+  - 8
+
+jobs:
+  include:
+    - stage: test
+      install:
+        - npm install
+        - npm install -g codecov
+      before_script:
+        - npm i -g npm
+      script:
+        - npm run eslint
+        - npm test
+        - codecov
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
+    - stage: release
+      script: skip
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script:
+          - npx semantic-release
+
+
+stages:
+  - test
+  - name: release
+    if: (branch = master) AND (type = push)

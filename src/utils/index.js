@@ -1,0 +1,23 @@
+import _deleteIn from './deleteIn';
+import * as _env from './env';
+import * as _func from './func';
+import _getErrorStrs from './getErrorStrs';
+import _getIn from './getIn';
+import _getParams from './getParams';
+import _getValueFromEvent from './getValueFromEvent';
+import * as _log from './log';
+import _mapValidateRules from './mapValidateRules';
+import * as _object from './object';
+import _setIn from './setIn';
+
+export const env = _env;
+export const func = _func;
+export const log = _log;
+export const obj = _object;
+export const deleteIn = _deleteIn;
+export const getErrorStrs = _getErrorStrs;
+export const getIn = _getIn;
+export const getParams = _getParams;
+export const getValueFromEvent = _getValueFromEvent;
+export const mapValidateRules = _mapValidateRules;
+export const setIn = _setIn;
