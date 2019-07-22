@@ -677,4 +677,22 @@ describe('options', () => {
             done();
         });
     });
+
+    describe('afterValidateRerender', () => {
+        it('should pass error messages to `afterValidateRerender` on validate', function(done) {
+            const mySpy = spy();
+            const field = new Field(this, { afterValidateRerender: mySpy });
+            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+
+            wrapper = mount(<Input {...inited} />);
+            field.validate();
+
+            assert(mySpy.calledOnce);
+            assert.equal(mySpy.args[0][0].errorsGroup.input.errors, 'my error message');
+            assert.equal(mySpy.args[0][0].options, field.options);
+            assert.equal(mySpy.args[0][0].instance, field.instance);
+
+            done();
+        });
+    });
 });

@@ -32,23 +32,8 @@ class Field {
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
         this.values = options.values || {};
-
-        /**
-         * processErrorMessage
-         * Implement when extending Field
-         * Takes in a React-like element, clones and adds 'error' as key
-         * @param {ReactElement | String} element
-         * @returns {ReactElement | String}
-         */
-        /*
-            processErrorMessage(element) {
-                if (element && isValidElement(element)) {
-                    return cloneElement(element, { key: 'error' });
-                }
-                return element;
-            }
-        */
         this.processErrorMessage = options.processErrorMessage;
+        this.afterValidateRerender = options.afterValidateRerender;
 
         this.options = Object.assign(
             {
@@ -591,9 +576,8 @@ class Field {
             callback && callback(errorsGroup, this.getValues(fieldNames));
             this._reRender();
 
-            // NOTE: Implement `afterValidate` when extending Field to have post validate logic
-            if (typeof this.afterValidate === 'function') {
-                this.afterValidate({
+            if (typeof this.afterValidateRerender === 'function') {
+                this.afterValidateRerender({
                     errorsGroup,
                     options: this.options,
                     instance: this.instance,
