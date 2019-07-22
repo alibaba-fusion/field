@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { isValidElement, cloneElement } from 'react';
 import assert from 'power-assert';
 import {getErrorStrs, getIn, setIn, deleteIn} from '../src/utils';
 
 /* eslint-disable react/jsx-filename-extension */
 /* global describe it */
+
+function processErrorMessage(element) {
+    if (element && isValidElement(element)) {
+        return cloneElement(element, { key: 'error' });
+    }
+    return element;
+}
+
 describe('Field Utils', () => {
-    
     describe('getErrorStrs', () => {
         it('should return `undefined` when given no errors', () => {
             assert(getErrorStrs() === undefined);
@@ -27,35 +34,34 @@ describe('Field Utils', () => {
             assert.deepEqual(getErrorStrs(errors), ['error 1', 'error 2']);
         });
 
-        it('should return array of React elements with `error` key when no key set', () => {
+        it('should return array of React elements with `error` key when no key set using custom `processErrorMessage` function', () => {
             const errors = [
                 { message: <span>message 1</span> }
             ];
-            const result = getErrorStrs(errors);
+            const result = getErrorStrs(errors, processErrorMessage);
             assert.equal(result[0].key, 'error');
         });
 
-        it('should accept React Elements in `message` key', () => {
+        it('should accept React Elements in `message` key using custom `processErrorMessage` function', () => {
             const errors = [
                 { message: <span>message 1</span> },
                 { message: <span>message 2</span> }
             ];
-            const result = getErrorStrs(errors);
+            const result = getErrorStrs(errors, processErrorMessage);
             assert.deepEqual(result[0].props.children, 'message 1');
             assert.deepEqual(result[1].props.children, 'message 2');
         });
 
-        it('should accept React Elements', () => {
+        it('should accept React Elements using custom `processErrorMessage` function', () => {
             const errors = [
                 <span key="1">message 1</span>,
                 <span key="2">message 2</span>
             ];
-            const result = getErrorStrs(errors);
+            const result = getErrorStrs(errors, processErrorMessage);
             assert.deepEqual(result[0].props.children, 'message 1');
             assert.deepEqual(result[1].props.children, 'message 2');
         });
-    })
-
+    });
     describe('getIn', () => {
         it('should return state when state is falsy', () => {
             assert(getIn(undefined, 'a') === undefined);

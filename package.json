@@ -14,6 +14,7 @@
     "build": "ice-scripts build",
     "prepublishOnly": "npm run build",
     "test": "ice-scripts test",
+    "test-watch": "ice-scripts test --jest-watchAll",
     "precommit": "lint-staged",
     "eslint": "eslint '@(src|test)/**/*.@(js|jsx)'"
   },
@@ -39,8 +40,7 @@
   ],
   "dependencies": {
     "@alifd/validate": "^1.0.0",
-    "prop-types": "^15.5.8",
-    "react-dom": "^16.8.6"
+    "prop-types": "^15.5.8"
   },
   "devDependencies": {
     "@alifd/eslint-config-next": "^2.0.0",
@@ -65,13 +65,11 @@
     "power-assert": "^1.6.1",
     "prettier": "^1.18.2",
     "react": "^16.3.0",
+    "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
     "redux": "^4.0.4",
     "semantic-release": "^15.13.18",
     "sinon": "^7.3.2"
-  },
-  "peerDependencies": {
-    "react": "^16.3.0"
   },
   "componentConfig": {
     "name": "field",

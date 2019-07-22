@@ -1,4 +1,3 @@
-import ReactDOM from 'react-dom';
 import Validate from '@alifd/validate';
 import {
     log,
@@ -33,6 +32,23 @@ class Field {
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
         this.values = options.values || {};
+
+        /**
+         * processErrorMessage
+         * Implement when extending Field
+         * Takes in a React-like element, clones and adds 'error' as key
+         * @param {ReactElement | String} element
+         * @returns {ReactElement | String}
+         */
+        /*
+            processErrorMessage(element) {
+                if (element && isValidElement(element)) {
+                    return cloneElement(element, { key: 'error' });
+                }
+                return element;
+            }
+        */
+        this.processErrorMessage = options.processErrorMessage;
 
         this.options = Object.assign(
             {
@@ -326,7 +342,10 @@ class Field {
             },
             errors => {
                 if (errors && errors.length) {
-                    field.errors = getErrorStrs(errors);
+                    field.errors = getErrorStrs(
+                        errors,
+                        this.processErrorMessage
+                    );
                     field.state = 'error';
                 } else {
                     field.errors = [];
@@ -541,7 +560,10 @@ class Field {
                 // update error in every Field
                 Object.keys(errorsGroup).forEach(i => {
                     const field = this._get(i);
-                    field.errors = getErrorStrs(errorsGroup[i].errors);
+                    field.errors = getErrorStrs(
+                        errorsGroup[i].errors,
+                        this.processErrorMessage
+                    );
                     field.state = 'error';
                 });
             }
@@ -569,44 +591,13 @@ class Field {
             callback && callback(errorsGroup, this.getValues(fieldNames));
             this._reRender();
 
-            if (errorsGroup && this.options.scrollToFirstError) {
-                let firstNode;
-                let firstTop;
-                for (const i in errorsGroup) {
-                    if (errorsGroup.hasOwnProperty(i)) {
-                        const instance = this.instance[i];
-                        const node = ReactDOM.findDOMNode(instance);
-                        if (!node) {
-                            return;
-                        }
-                        const top = node.offsetTop;
-                        if (firstTop === undefined || firstTop > top) {
-                            firstTop = top;
-                            firstNode = node;
-                        }
-                    }
-                }
-
-                if (firstNode) {
-                    if (
-                        typeof this.options.scrollToFirstError === 'number' &&
-                        window &&
-                        typeof window.scrollTo === 'function'
-                    ) {
-                        const offsetLeft =
-                            document &&
-                            document.body &&
-                            document.body.offsetLeft
-                                ? document.body.offsetLeft
-                                : 0;
-                        window.scrollTo(
-                            offsetLeft,
-                            firstTop + this.options.scrollToFirstError
-                        );
-                    } else if (firstNode.scrollIntoViewIfNeeded) {
-                        firstNode.scrollIntoViewIfNeeded(true);
-                    }
-                }
+            // NOTE: Implement `afterValidate` when extending Field to have post validate logic
+            if (typeof this.afterValidate === 'function') {
+                this.afterValidate({
+                    errorsGroup,
+                    options: this.options,
+                    instance: this.instance,
+                });
             }
         });
     }

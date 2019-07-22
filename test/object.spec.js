@@ -257,7 +257,6 @@ describe('src/object.js', function() {
         it('deepMerge support deep', function() {
 
             const res = object.deepMerge({}, {a: 'te'}, {a:{b:3}});
-            console.log(res);
             assert(Object.keys(res).length === 1);
             assert(res.a.b === 3);
         });
@@ -281,7 +280,6 @@ describe('src/object.js', function() {
                 family: ['wife', 'kids', 'dog']
             });
 
-            console.log(res);
             assert(Object.keys(res).length === 5);
             assert(Object.keys(res.hair).length === 2);
             assert(res.family.length === 3);
@@ -290,7 +288,6 @@ describe('src/object.js', function() {
         it('deepMerge support deep', function() {
 
             const res = object.deepMerge({}, obj1, obj2);
-            console.log(res);
             assert(Object.keys(res).length === 4);
             assert(res.a.ds === '3');
             assert(res.foo === '100');

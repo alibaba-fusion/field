@@ -1,17 +1,13 @@
-import { isValidElement, cloneElement } from 'react';
-
-function cloneAndAddKey(element) {
-    if (element && isValidElement(element)) {
-        return cloneElement(element, { key: 'error' });
-    }
-    return element;
-}
-
-export default function getErrorStrs(errors) {
+export default function getErrorStrs(errors, processErrorMessage) {
     if (errors) {
-        return errors.map(function(e) {
+        return errors.map(e => {
             const message = e.message || e;
-            return cloneAndAddKey(message);
+
+            if (typeof processErrorMessage === 'function') {
+                return processErrorMessage(message);
+            }
+
+            return message;
         });
     }
     return errors;

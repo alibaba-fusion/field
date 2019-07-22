@@ -5,6 +5,7 @@ import Enzyme, { mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import assert from 'power-assert';
 import { Input } from '@alifd/next';
+import { spy } from 'sinon';
 import Field from '../src';
 
 Enzyme.configure({ adapter: new Adapter() });
@@ -624,6 +625,21 @@ describe('options', () => {
             field.validate('input');
             assert(field.getError('input') !== null);
 
+            done();
+        });
+    });
+
+    describe('processErrorMessage', () => {
+        it('should pass error messages to `processErrorMessage` on validate', function(done) {
+            const mySpy = spy();
+            const field = new Field(this, { processErrorMessage: mySpy });
+            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+
+            wrapper = mount(<Input {...inited} />);
+            field.validate();
+
+            assert(mySpy.calledOnce);
+            assert(mySpy.args[0][0] === 'my error message');
             done();
         });
     });
