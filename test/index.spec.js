@@ -1,5 +1,5 @@
 /* eslint-disable react/no-multi-comp */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Enzyme, { mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import assert from 'power-assert';
@@ -738,7 +738,7 @@ describe('field', () => {
         it('should set field and return value from `getValue`', (done) => {
             class myField extends Field {
                 static useField(...args) {
-                    return super.useField(useState)(...args);
+                    return super.useField({useState, useMemo})(...args);
                 }
             }
              
@@ -767,7 +767,7 @@ describe('field', () => {
         it('should rerender on `setValue`', (done) => {
             class myField extends Field {
                 static useField(...args) {
-                    return super.useField(useState)(...args);
+                    return super.useField({useState, useMemo})(...args);
                 }
             }
              
@@ -797,6 +797,30 @@ describe('field', () => {
 
             const wrapper = mount(<Demo />);
             wrapper.find('#setValue').simulate('click');
+        });
+
+        it('should capture field options', () => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField({ parseName: true });
+
+                const { init } = field;
+
+                assert(field.options.parseName)
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <br/><br/>
+                    </div>);
+             }
+
+            const wrapper = mount(<Demo />);
         });
     })
 });

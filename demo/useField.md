@@ -13,14 +13,14 @@ static useField(...args) {
 
 ````jsx
 import ReactDOM from 'react-dom';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Input, Button } from '@alifd/next';
 import Field from '@alifd/field';
 
 
 class myField extends Field {
     static useField(...args) {
-        return super.useField(useState)(...args);
+        return super.useField({useState, useMemo})(...args);
     }
 }
 

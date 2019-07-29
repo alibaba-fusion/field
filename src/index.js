@@ -22,11 +22,19 @@ class Field {
         return new Field(args);
     }
 
-    static useField(useState) {
+    static useField({ useState, useMemo }) {
         return function(options = {}) {
-            const [renderToggle, setRenderToggle] = useState(0);
-            const f = new Field({ renderToggle, setRenderToggle, ...options });
-            const [field] = useState(f);
+            const [_, setState] = useState();
+
+            const field = useMemo(() => {
+                return new Field(
+                    {
+                        setState,
+                    },
+                    options
+                );
+            }, [setState]);
+
             return field;
         };
     }
@@ -750,13 +758,7 @@ class Field {
     //trigger rerender
     _reRender() {
         if (this.com) {
-            if (
-                this.com.setRenderToggle &&
-                typeof this.com.setRenderToggle === 'function'
-            ) {
-                this.com.renderToggle = !this.com.renderToggle;
-                this.com.setRenderToggle(!this.com.renderToggle);
-            } else if (!this.options.forceUpdate && this.com.setState) {
+            if (!this.options.forceUpdate && this.com.setState) {
                 this.com.setState({});
             } else if (this.com.forceUpdate) {
                 this.com.forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
