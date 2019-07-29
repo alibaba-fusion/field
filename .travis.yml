@@ -26,19 +26,10 @@ jobs:
         skip_cleanup: true
         script:
           - npx semantic-release
-    - stage: post-release
-      script: skip
-      deploy:
-        provider: script
-        skip_cleanup: true
-        script:
-          - git checkout develop
-          - git rebase master
 
 
 stages:
   - test
+    if: ((branch = master) AND (type = push)) OR (type = pull_request)
   - name: release
-    if: (branch = master) AND (type = push)
-  - name: post-release
     if: (branch = master) AND (type = push)
