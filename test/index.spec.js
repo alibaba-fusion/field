@@ -820,7 +820,7 @@ describe('field', () => {
                     </div>);
              }
 
-            const wrapper = mount(<Demo />);
+            mount(<Demo />);
         });
     })
 });

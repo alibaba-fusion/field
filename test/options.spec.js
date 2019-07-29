@@ -145,7 +145,7 @@ describe('options', () => {
                         />
                         <button
                             onClick={() => {
-                                this.field.validate((error, value, cb) => {
+                                this.field.validate(error => {
                                     assert(
                                         error.input.errors[0] === 'cant be null'
                                     );
