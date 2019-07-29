@@ -1,5 +1,3 @@
-/// <reference types="react" />
-
 type FieldOption = {
     /**
      * 所有组件的change都会到达这里[setValue不会触发该函数]
@@ -159,14 +157,14 @@ export default class Field {
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
      */
-    constructor(contextComp: T, options?: FieldOption);
+    constructor(contextComp: any, options?: FieldOption);
 
     /**
      * 
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
      */
-    static create(contextComp: T, options?: FieldOption): Field;
+    static create(contextComp: any, options?: FieldOption): Field;
 
     /**
      *
@@ -174,7 +172,7 @@ export default class Field {
      * @param useState React compatible `useState` function
      * @returns Function
      */
-    static useField<T>(useState: function): (options?: FieldOption) => Field;
+    static useField<T>(config: {useState: Function, useMemo: Function}): (options?: FieldOption) => Field;
 
     /**
      * 初始化每个组件

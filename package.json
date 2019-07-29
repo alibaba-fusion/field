@@ -1,11 +1,12 @@
 {
-  "name": "@alifd/field",
-  "version": "1.0.1",
-  "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
-  "files": [
-    "demo/",
-    "lib/",
-    "build/"
+    "name": "@alifd/field",
+    "version": "1.0.1",
+    "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
+    "files": [
+        "demo/",
+        "lib/",
+        "build/",
+        "types/"
     ],
     "main": "lib/index.js",
     "stylePath": "style.js",
@@ -69,7 +70,8 @@
         "react-redux": "^7.1.0",
         "redux": "^4.0.4",
         "semantic-release": "^15.13.18",
-        "sinon": "^7.3.2"
+        "sinon": "^7.3.2",
+        "typescript": "^3.5.3"
     },
     "componentConfig": {
         "name": "field",
