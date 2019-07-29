@@ -29,7 +29,7 @@ jobs:
 
 
 stages:
-  - test
+  - name: test
     if: ((branch = master) AND (type = push)) OR (type = pull_request)
   - name: release
     if: (branch = master) AND (type = push)
