@@ -18,13 +18,13 @@ const initMeta = {
 };
 
 class Field {
-    static create(...args) {
-        return new Field(args);
+    static create(com, options = {}) {
+        return new Field(com, options);
     }
 
     static useField({ useState, useMemo }) {
         return function(options = {}) {
-            const [_, setState] = useState();
+            const [, setState] = useState();
 
             const field = useMemo(() => {
                 return new Field(
