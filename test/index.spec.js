@@ -1,5 +1,5 @@
 /* eslint-disable react/no-multi-comp */
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Enzyme, { mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import assert from 'power-assert';
@@ -14,6 +14,12 @@ const FormItem = Form.Item;
 /* eslint-disable react/jsx-filename-extension */
 /*global describe it afterEach */
 describe('field', () => {
+    it('should create new field with `Field.create`', function() {
+        const field = Field.create(this);
+
+        assert(!!field);
+        assert(Field.prototype.isPrototypeOf(field));
+    })
     describe('render', () => {
         it('should support Form', function(done) {
             class Demo extends React.Component {
@@ -523,83 +529,6 @@ describe('field', () => {
             done();
         });
 
-        it('validate', function(done) {
-            const field = new Field(this);
-            const inited = field.init('input', {
-                rules: [{ required: true, message: 'cant be null' }],
-            });
-
-            const wrapper = mount(<Input {...inited} />);
-            wrapper.find('input').simulate('change', {
-                target: {
-                    value: '',
-                },
-            });
-
-            field.validate((error) => {
-                assert(error.input.errors[0] === 'cant be null');
-            });
-            field.validate('input', (error) => {
-                assert(error.input.errors[0] === 'cant be null');
-            });
-            field.validate(['input'], (error) => {
-                assert(error.input.errors[0] === 'cant be null');
-            });
-
-            field.init('input2', {
-                initValue: 123,
-                rules: [
-                    {
-                        required: true,
-                        message: 'cant be 0',
-                    },
-                ],
-            });
-            field.validate(['input2'], (error) => {
-                assert(error === null);
-            });
-
-            // field.init('input3', {initValue:0, rules: [{required: true, message:'cant be 0' }]});
-            // field.validate(['input3'], (error, value, cb)=> {
-            //     assert(error === 'cant be 0');
-            // })
-
-            done();
-        });
-
-        it('should show setError on validate', function(done) {
-            const field = new Field(this);
-            const inited = field.init('input');
-            const wrapper = mount(<Input {...inited} />);
-            
-            field.setError('input', 'my error');
-            field.validate('input', (err) => {
-                assert(err.input.errors[0] === 'my error');
-                wrapper.unmount();
-                done();
-            });
-        });
-
-        it('should merge setError and rules on validate', function(done) {
-            const field = new Field(this);
-            const inited = field.init('input');
-            const inited2 = field.init('input2', {
-                rules: [{ required: true, message: 'cant be null' }],
-            });
-            const wrapper = mount(<Input {...inited} />);
-            const wrapper2 = mount(<Input {...inited2} />);
-
-            field.setError('input', 'my error');
-            field.validate((err) => {
-                assert(err.input.errors[0] === 'my error');
-                assert(err.input2.errors[0] === 'cant be null');
-
-                wrapper.unmount();
-                wrapper2.unmount();
-                done();
-            });
-        });
-
         it('should overwrite setError errors when using rules', function(done) {
             const field = new Field(this);
 
@@ -726,5 +655,422 @@ describe('field', () => {
                 assert(field.getValue('input').length === 2);
             });
         });
+    });
+
+    describe('useField', () => {
+        it('should set field and return value from `getValue`', (done) => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField();
+            
+                const { init, getValue } = field;
+            
+                function onGetValue() {
+                    assert.equal(getValue('input'), 'test');
+                    done();
+                }
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <button id="getValue" onClick={onGetValue}> getValue </button>
+                        <br/><br/>
+                    </div>);
+             }
+
+            const wrapper = mount(<Demo />);
+            wrapper.find('#getValue').simulate('click');
+        });
+
+        it('should rerender on `setValue`', (done) => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField();
+            
+                const { init, setValue } = field;
+            
+                function onSetValue() {
+                    setValue('input', 'abc');
+                }
+
+                // initial render will be undefined
+                // second render is after `setValue` call
+                if (field.getValue('input') === 'abc') {
+                    assert(true);
+                    done();
+                }
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <button id="setValue" onClick={onSetValue}> setValue </button>
+                        <br/><br/>
+                    </div>);
+             }
+
+            const wrapper = mount(<Demo />);
+            wrapper.find('#setValue').simulate('click');
+        });
+
+        it('should capture field options', () => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField({ parseName: true });
+
+                const { init } = field;
+
+                assert(field.options.parseName)
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <br/><br/>
+                    </div>);
+             }
+
+            mount(<Demo />);
+        });
+    })
+
+    describe('validate', function() {
+        it('validate', function(done) {
+            const field = new Field(this);
+            const inited = field.init('input', {
+                rules: [{ required: true, message: 'cant be null' }],
+            });
+
+            const wrapper = mount(<Input {...inited} />);
+            wrapper.find('input').simulate('change', {
+                target: {
+                    value: '',
+                },
+            });
+
+            // field.validate((error) => {
+            //     assert(error.input.errors[0] === 'cant be null');
+            // });
+            // field.validate('input', (error) => {
+            //     assert(error.input.errors[0] === 'cant be null');
+            // });
+            // field.validate(['input'], (error) => {
+            //     assert(error.input.errors[0] === 'cant be null');
+            // });
+
+            field.init('input2', {
+                initValue: 123,
+                rules: [
+                    {
+                        required: true,
+                        message: 'cant be 0',
+                    },
+                ],
+            });
+            field.validate(['input2'], (error) => {
+                assert(error === null);
+            });
+
+            // field.init('input3', {initValue:0, rules: [{required: true, message:'cant be 0' }]});
+            // field.validate(['input3'], (error, value, cb)=> {
+            //     assert(error === 'cant be 0');
+            // })
+
+            done();
+        });
+
+        it('should show setError on validate', function(done) {
+            const field = new Field(this);
+            const inited = field.init('input');
+            const wrapper = mount(<Input {...inited} />);
+            
+            field.setError('input', 'my error');
+            field.validate('input', (err) => {
+                assert(err.input.errors[0] === 'my error');
+                wrapper.unmount();
+                done();
+            });
+        });
+
+        it('should merge setError and rules on validate', function(done) {
+            const field = new Field(this);
+            const inited = field.init('input');
+            const inited2 = field.init('input2', {
+                rules: [{ required: true, message: 'cant be null' }],
+            });
+            const wrapper = mount(<Input {...inited} />);
+            const wrapper2 = mount(<Input {...inited2} />);
+
+            field.setError('input', 'my error');
+            field.validate((err) => {
+                assert(err.input.errors[0] === 'my error');
+                assert(err.input2.errors[0] === 'cant be null');
+
+                wrapper.unmount();
+                wrapper2.unmount();
+                done();
+            });
+        });
+    })
+
+    describe('validatePromise', function() {
+        describe('pure promise', () => {
+            it('should return all errors when no name', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                const { errors } = await field.validatePromise();
+                assert(errors.input.errors[0] === 'cant be null');
+            });
+    
+            it('should return errors when name is string', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+    
+                const { errors } = await field.validatePromise('input');
+                assert(errors.input.errors[0] === 'cant be null');
+            });
+    
+            it('should return errors when array of names passed', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                const { errors } = await field.validatePromise(['input']);
+                assert(errors.input.errors[0] === 'cant be null');
+            });
+    
+            it('should return null when no errors', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+    
+                const { errors } = await field.validatePromise(['input2']);
+                assert.equal(errors, null);
+            });
+    
+            it('should show setError on validate', async function() {
+                const field = new Field(this);
+                const inited = field.init('input');
+                const wrapper = mount(<Input {...inited} />);
+                
+                field.setError('input', 'my error');
+                const { errors } = await field.validatePromise('input');
+                assert(errors.input.errors[0] === 'my error');
+                wrapper.unmount();
+            });
+    
+            it('should merge setError and rules on validate', async function() {
+                const field = new Field(this);
+                const inited = field.init('input');
+                const inited2 = field.init('input2', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+                const wrapper = mount(<Input {...inited} />);
+                const wrapper2 = mount(<Input {...inited2} />);
+    
+                field.setError('input', 'my error');
+    
+                const { errors } = await field.validatePromise();
+                assert(errors.input.errors[0] === 'my error');
+                assert(errors.input2.errors[0] === 'cant be null');
+    
+                wrapper.unmount();
+                wrapper2.unmount();
+            });
+        })
+        
+        describe('callback', () => {
+            it('should return all errors when no name', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                const { errors } = await field.validatePromise(async ({ errors }) => {
+                    assert(errors.input.errors[0] === 'cant be null');
+                    return { errors: 'error result' };
+                });
+
+                assert(errors === 'error result');
+            });
+    
+            it('should return errors when name is string', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                const { errors } = await field.validatePromise('input', async ({ errors }) => {
+                    assert(errors.input.errors[0] === 'cant be null');
+                    return { errors: 'error result' };
+                });
+
+                assert(errors === 'error result');
+            });
+    
+            it('should return errors when array of names passed', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                const { errors } = await field.validatePromise(['input'], async ({ errors }) => {
+                    assert(errors.input.errors[0] === 'cant be null');
+                    return { errors: 'error result' };
+                });
+
+                assert(errors === 'error result');
+            });
+    
+            it('should return null when no errors', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { errors } = await field.validatePromise(['input2'], async ({ errors }) => {
+                    assert.equal(errors, null);
+                    return { errors: 'error result' };
+                });
+
+                assert(errors === 'error result');
+            });
+    
+            it('should show setError on validate', async function() {
+                const field = new Field(this);
+                const inited = field.init('input');
+                const wrapper = mount(<Input {...inited} />);
+                
+                field.setError('input', 'my error');
+
+                const { errors } = await field.validatePromise('input', async ({ errors }) => {
+                    assert(errors.input.errors[0] === 'my error');
+                    return { errors: 'error result' };
+                });
+                
+                assert(errors === 'error result');
+                wrapper.unmount();
+            });
+    
+            it('should merge setError and rules on validate', async function() {
+                const field = new Field(this);
+                const inited = field.init('input');
+                const inited2 = field.init('input2', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+                const wrapper = mount(<Input {...inited} />);
+                const wrapper2 = mount(<Input {...inited2} />);
+    
+                field.setError('input', 'my error');
+                
+                const { errors } = await field.validatePromise(async ({ errors }) => {
+                    assert(errors.input.errors[0] === 'my error');
+                    assert(errors.input2.errors[0] === 'cant be null');
+                    return { errors: 'error result' };
+                });
+
+                assert(errors === 'error result');
+    
+                wrapper.unmount();
+                wrapper2.unmount();
+            });
+        })
     });
 });

@@ -13,7 +13,8 @@ usage of `getValue` `setValue` `reset`
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Input, Button, Field } from '@alifd/next';
+import { Input, Button } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 

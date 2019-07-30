@@ -13,7 +13,8 @@ by use `spliceArray` could delete array type keys (eg: name.{index}), and make l
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Button, Input, Table, Field } from '@alifd/next';
+import { Button, Input, Table } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 class Demo extends React.Component {

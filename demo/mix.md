@@ -13,7 +13,8 @@ multi type of component
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Button, Checkbox, Input, Radio, Select, Range, DatePicker, TimePicker, Field } from '@alifd/next';
+import { Button, Checkbox, Input, Radio, Select, Range, DatePicker, TimePicker } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 const CheckboxGroup = Checkbox.Group;

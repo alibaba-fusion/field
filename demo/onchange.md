@@ -13,7 +13,8 @@ manage value by `onChange`
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Input, Select, Range, Field } from '@alifd/next';
+import { Input, Select, Range } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 
