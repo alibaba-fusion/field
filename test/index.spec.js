@@ -657,11 +657,11 @@ describe('field', () => {
         });
     });
 
-    describe('useField', () => {
+    describe('getUseField', () => {
         it('should set field and return value from `getValue`', (done) => {
             class myField extends Field {
                 static useField(...args) {
-                    return super.useField({useState, useMemo})(...args);
+                    return this.getUseField({useState, useMemo})(...args);
                 }
             }
              
@@ -690,7 +690,7 @@ describe('field', () => {
         it('should rerender on `setValue`', (done) => {
             class myField extends Field {
                 static useField(...args) {
-                    return super.useField({useState, useMemo})(...args);
+                    return this.getUseField({useState, useMemo})(...args);
                 }
             }
              
@@ -725,7 +725,7 @@ describe('field', () => {
         it('should capture field options', () => {
             class myField extends Field {
                 static useField(...args) {
-                    return super.useField({useState, useMemo})(...args);
+                    return this.getUseField({useState, useMemo})(...args);
                 }
             }
              

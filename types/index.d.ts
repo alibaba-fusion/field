@@ -172,7 +172,7 @@ export default class Field {
      * @param useState React compatible `useState` function
      * @returns Function
      */
-    static useField<T>(config: {useState: Function, useMemo: Function}): (options?: FieldOption) => Field;
+    static getUseField<T>(config: {useState: Function, useMemo: Function}): (options?: FieldOption) => Field;
 
     /**
      * 初始化每个组件
