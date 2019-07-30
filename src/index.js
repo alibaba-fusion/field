@@ -18,6 +18,27 @@ const initMeta = {
 };
 
 class Field {
+    static create(com, options = {}) {
+        return new Field(com, options);
+    }
+
+    static useField({ useState, useMemo }) {
+        return function(options = {}) {
+            const [, setState] = useState();
+
+            const field = useMemo(() => {
+                return new Field(
+                    {
+                        setState,
+                    },
+                    options
+                );
+            }, [setState]);
+
+            return field;
+        };
+    }
+
     constructor(com, options = {}) {
         if (!com) {
             log.warning(

@@ -1,7 +1,3 @@
-/// <reference types="react" />
-
-import * as React from 'react';
-
 type FieldOption = {
     /**
      * 所有组件的change都会到达这里[setValue不会触发该函数]
@@ -155,13 +151,28 @@ type InitOption<T = string> = {
     getValueFromEvent?: (eventArgs: object) => T;
 };
 
-export default class Field<T extends React.Component> {
+export default class Field {
     /**
      *
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
      */
-    constructor(contextComp: T, options?: FieldOption);
+    constructor(contextComp: any, options?: FieldOption);
+
+    /**
+     * 
+     * @param contextComp 传入调用class的this
+     * @param options 一些事件配置
+     */
+    static create(contextComp: any, options?: FieldOption): Field;
+
+    /**
+     *
+     * 
+     * @param useState React compatible `useState` function
+     * @returns Function
+     */
+    static useField<T>(config: {useState: Function, useMemo: Function}): (options?: FieldOption) => Field;
 
     /**
      * 初始化每个组件

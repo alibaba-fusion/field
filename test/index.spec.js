@@ -1,5 +1,5 @@
 /* eslint-disable react/no-multi-comp */
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Enzyme, { mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import assert from 'power-assert';
@@ -14,6 +14,12 @@ const FormItem = Form.Item;
 /* eslint-disable react/jsx-filename-extension */
 /*global describe it afterEach */
 describe('field', () => {
+    it('should create new field with `Field.create`', function() {
+        const field = Field.create(this);
+
+        assert(!!field);
+        assert(Field.prototype.isPrototypeOf(field));
+    })
     describe('render', () => {
         it('should support Form', function(done) {
             class Demo extends React.Component {
@@ -727,4 +733,94 @@ describe('field', () => {
             });
         });
     });
+
+    describe('useField', () => {
+        it('should set field and return value from `getValue`', (done) => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField();
+            
+                const { init, getValue } = field;
+            
+                function onGetValue() {
+                    assert.equal(getValue('input'), 'test');
+                    done();
+                }
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <button id="getValue" onClick={onGetValue}> getValue </button>
+                        <br/><br/>
+                    </div>);
+             }
+
+            const wrapper = mount(<Demo />);
+            wrapper.find('#getValue').simulate('click');
+        });
+
+        it('should rerender on `setValue`', (done) => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField();
+            
+                const { init, setValue } = field;
+            
+                function onSetValue() {
+                    setValue('input', 'abc');
+                }
+
+                // initial render will be undefined
+                // second render is after `setValue` call
+                if (field.getValue('input') === 'abc') {
+                    assert(true);
+                    done();
+                }
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <button id="setValue" onClick={onSetValue}> setValue </button>
+                        <br/><br/>
+                    </div>);
+             }
+
+            const wrapper = mount(<Demo />);
+            wrapper.find('#setValue').simulate('click');
+        });
+
+        it('should capture field options', () => {
+            class myField extends Field {
+                static useField(...args) {
+                    return super.useField({useState, useMemo})(...args);
+                }
+            }
+             
+            function Demo() {
+                const field = myField.useField({ parseName: true });
+
+                const { init } = field;
+
+                assert(field.options.parseName)
+            
+                return (
+                    <div className="demo">
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <br/><br/>
+                    </div>);
+             }
+
+            mount(<Demo />);
+        });
+    })
 });
