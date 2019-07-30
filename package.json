@@ -1,92 +1,93 @@
 {
-    "name": "@alifd/field",
-    "version": "1.0.1",
-    "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
-    "files": [
-        "demo/",
-        "lib/",
-        "build/",
-        "types/"
+  "name": "@alifd/field",
+  "version": "1.0.1",
+  "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
+  "files": [
+    "demo/",
+    "lib/",
+    "build/",
+    "types/"
+  ],
+  "main": "lib/index.js",
+  "types": "types/index.d.ts",
+  "stylePath": "style.js",
+  "scripts": {
+    "start": "ice-scripts dev",
+    "build": "ice-scripts build",
+    "prepublishOnly": "npm run build",
+    "test": "ice-scripts test",
+    "test-watch": "ice-scripts test --jest-watchAll",
+    "precommit": "lint-staged",
+    "eslint": "eslint '@(src|test)/**/*.@(js|jsx)'"
+  },
+  "lint-staged": {
+    "@(src|scripts|docs/*/demo)/**/*.@(js|jsx)": [
+      "prettier --write"
     ],
-    "main": "lib/index.js",
-    "stylePath": "style.js",
-    "scripts": {
-        "start": "ice-scripts dev",
-        "build": "ice-scripts build",
-        "prepublishOnly": "npm run build",
-        "test": "ice-scripts test",
-        "test-watch": "ice-scripts test --jest-watchAll",
-        "precommit": "lint-staged",
-        "eslint": "eslint '@(src|test)/**/*.@(js|jsx)'"
-    },
-    "lint-staged": {
-        "@(src|scripts|docs/*/demo)/**/*.@(js|jsx)": [
-            "prettier --write"
-        ],
-        "@(src|scripts|docs/*/demo)/**/*.@(js|jsx|md)": [
-            "eslint",
-            "git add"
-        ]
-    },
-    "husky": {
-        "hooks": {
-            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-        }
-    },
-    "license": "MIT",
-    "keywords": [
-        "ice",
-        "react",
-        "component"
-    ],
-    "dependencies": {
-        "@alifd/validate": "^1.1.1",
-        "prop-types": "^15.5.8"
-    },
-    "devDependencies": {
-        "@alifd/eslint-config-next": "^2.0.0",
-        "@alifd/next": "^1.15.12",
-        "@commitlint/cli": "^8.1.0",
-        "babel-eslint": "^10.0.2",
-        "enzyme": "^3.10.0",
-        "enzyme-adapter-react-16": "^1.14.0",
-        "es6-promise-polyfill": "^1.2.0",
-        "eslint": "^6.0.1",
-        "eslint-config-prettier": "^6.0.0",
-        "eslint-plugin-import": "^2.18.0",
-        "eslint-plugin-markdown": "^1.0.0",
-        "eslint-plugin-react": "^7.14.2",
-        "husky": "^3.0.0",
-        "ice-plugin-component": "^0.1.1",
-        "ice-plugin-fusion": "^0.1.4",
-        "ice-scripts": "^2.0.0",
-        "lint-staged": "^9.2.0",
-        "mocha": "^6.1.4",
-        "moment": "^2.24.0",
-        "power-assert": "^1.6.1",
-        "prettier": "^1.18.2",
-        "react": "^16.3.0",
-        "react-dom": "^16.8.6",
-        "react-redux": "^7.1.0",
-        "redux": "^4.0.4",
-        "semantic-release": "^15.13.18",
-        "sinon": "^7.3.2",
-        "typescript": "^3.5.3"
-    },
-    "componentConfig": {
-        "name": "field",
-        "title": "Field",
-        "categories": [
-            "表单"
-        ]
-    },
-    "homepage": "https://github.com/alibaba-fusion/field",
-    "bugs": "https://github.com/alibaba-fusion/field/issues",
-    "publishConfig": {
-        "access": "public"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/alibaba-fusion/field.git"
+    "@(src|scripts|docs/*/demo)/**/*.@(js|jsx|md)": [
+      "eslint",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
+  },
+  "license": "MIT",
+  "keywords": [
+    "ice",
+    "react",
+    "component"
+  ],
+  "dependencies": {
+    "@alifd/validate": "^1.1.1",
+    "prop-types": "^15.5.8"
+  },
+  "devDependencies": {
+    "@alifd/eslint-config-next": "^2.0.0",
+    "@alifd/next": "^1.15.12",
+    "@commitlint/cli": "^8.1.0",
+    "babel-eslint": "^10.0.2",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.14.0",
+    "es6-promise-polyfill": "^1.2.0",
+    "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-markdown": "^1.0.0",
+    "eslint-plugin-react": "^7.14.2",
+    "husky": "^3.0.0",
+    "ice-plugin-component": "^0.1.1",
+    "ice-plugin-fusion": "^0.1.4",
+    "ice-scripts": "^2.0.0",
+    "lint-staged": "^9.2.0",
+    "mocha": "^6.1.4",
+    "moment": "^2.24.0",
+    "power-assert": "^1.6.1",
+    "prettier": "^1.18.2",
+    "react": "^16.3.0",
+    "react-dom": "^16.8.6",
+    "react-redux": "^7.1.0",
+    "redux": "^4.0.4",
+    "semantic-release": "^15.13.18",
+    "sinon": "^7.3.2",
+    "typescript": "^3.5.3"
+  },
+  "componentConfig": {
+    "name": "field",
+    "title": "Field",
+    "categories": [
+      "表单"
+    ]
+  },
+  "homepage": "https://unpkg.com/@alifd/field@1.0.1/build/index.html",
+  "bugs": "https://github.com/alibaba-fusion/field/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alibaba-fusion/field.git"
+  }
 }
