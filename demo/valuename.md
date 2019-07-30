@@ -12,7 +12,8 @@ default valueName is `value`
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Button, Checkbox, Radio, Switch, Field } from '@alifd/next';
+import { Button, Checkbox, Radio, Switch } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 

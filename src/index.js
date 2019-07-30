@@ -335,11 +335,15 @@ class Field {
         field.state = 'loading';
 
         let validate = this._getCache(name, trigger);
-        validate && validate.abort();
+
+        if (validate && typeof validate.abort === 'function') {
+            validate.abort();
+        }
 
         validate = new Validate({
             [name]: rule,
         });
+
         this._setCache(name, trigger, validate);
 
         validate.validate(
@@ -607,6 +611,123 @@ class Field {
         });
     }
 
+    /**
+     * validate by trigger - Promise version
+     * NOTES:
+     * - `afterValidateRerender` is not called in `validatePromise`. The rerender is called just before this function
+     *      returns a promise, so use the returned promise to call any after rerender logic.
+     *
+     * @param {Array} ns names
+     * @param {Function} cb (Optional) callback after validate, must return a promise or a value
+     *                  - ({errors, values}) => Promise({errors, values}) | {errors, values}
+     * @returns {Promise} - resolves with {errors, values}
+     */
+    async validatePromise(ns, cb) {
+        const { names, callback } = getParams(ns, cb);
+        const fieldNames = names || this.getNames();
+
+        const descriptor = {};
+        const values = {};
+
+        let hasRule = false;
+        for (let i = 0; i < fieldNames.length; i++) {
+            const name = fieldNames[i];
+            const field = this._get(name);
+
+            if (!field) {
+                continue;
+            }
+
+            if (field.rules && field.rules.length) {
+                descriptor[name] = field.rules;
+                values[name] = this.getValue(name);
+                hasRule = true;
+
+                // clear error
+                field.errors = [];
+                field.state = '';
+            }
+        }
+
+        if (!hasRule) {
+            const errors = this.formatGetErrors(fieldNames);
+            if (callback) {
+                return callback({ errors, values: this.getValues(fieldNames) });
+            } else {
+                return { errors, values: this.getValues(fieldNames) };
+            }
+        }
+
+        const validate = new Validate(descriptor, {
+            first: this.options.first,
+        });
+
+        const results = await validate.validatePromise(values);
+        const errors = (results && results.errors) || [];
+
+        const errorsGroup = this._getErrorsGroup({ errors, fieldNames });
+
+        let callbackResults = {
+            errors: errorsGroup,
+            values: this.getValues(fieldNames),
+        };
+        try {
+            if (callback) {
+                callbackResults = await callback(callbackResults);
+            }
+        } catch (error) {
+            return error;
+        }
+        this._reRender();
+
+        return callbackResults;
+    }
+
+    _getErrorsGroup({ errors, fieldNames }) {
+        let errorsGroup = null;
+        if (errors && errors.length) {
+            errorsGroup = {};
+            errors.forEach(e => {
+                const fieldName = e.field;
+                if (!errorsGroup[fieldName]) {
+                    errorsGroup[fieldName] = {
+                        errors: [],
+                    };
+                }
+                const fieldErrors = errorsGroup[fieldName].errors;
+                fieldErrors.push(e.message);
+            });
+        }
+        if (errorsGroup) {
+            // update error in every Field
+            Object.keys(errorsGroup).forEach(i => {
+                const field = this._get(i);
+                field.errors = getErrorStrs(
+                    errorsGroup[i].errors,
+                    this.processErrorMessage
+                );
+                field.state = 'error';
+            });
+        }
+
+        const formattedGetErrors = this.formatGetErrors(fieldNames);
+
+        if (formattedGetErrors) {
+            errorsGroup = Object.assign({}, formattedGetErrors, errorsGroup);
+        }
+
+        // update to success which has no error
+        for (let i = 0; i < fieldNames.length; i++) {
+            const name = fieldNames[i];
+            const field = this._get(name);
+            if (field.rules && !(errorsGroup && name in errorsGroup)) {
+                field.state = 'success';
+            }
+        }
+
+        return errorsGroup;
+    }
+
     _reset(ns, backToDefault) {
         if (typeof ns === 'string') {
             ns = [ns];
@@ -667,11 +788,9 @@ class Field {
 
     getNames() {
         const fieldsMeta = this.fieldsMeta;
-        return fieldsMeta
-            ? Object.keys(fieldsMeta).filter(() => {
-                  return true;
-              })
-            : [];
+        return Object.keys(fieldsMeta).filter(() => {
+            return true;
+        });
     }
 
     remove(ns) {

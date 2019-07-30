@@ -1,7 +1,8 @@
 ---
-title: 校验 - validate
+title: 校验 - validatePromise
 order: 4
 ---
+
 校验的错误信息需要用`getError`获取
 
 `注意`：Form 和 Field 做了深度结合，在 Form 中使用Field，错误信息不需`getError`获取会自动展现。
@@ -15,6 +16,7 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import { Input, Button, Checkbox } from '@alifd/next';
 import Field from '@alifd/field';
+
 
 
 const CheckboxGroup = Checkbox.Group;
@@ -38,19 +40,23 @@ class App extends React.Component {
     }
     field = new Field(this, {scrollToFirstError: -10});
 
-    isChecked(rule, value, callback) {
+    isChecked(rule, value) {
         if (!value) {
-            return callback('consent agreement not checked ');
+            return Promise.reject('consent agreement not checked ')
         } else {
-            return callback();
+            return Promise.resolve(null);
         }
     }
 
-    userName(rule, value, callback) {
+    userName(rule, value) {
         if (value === 'frank') {
-            setTimeout(() => callback('name existed'), 200);
+            return new Promise((resolve, reject) => {
+                setTimeout(() => resolve('name existed'), 200);
+            })
         } else {
-            setTimeout(() => callback(), 200);
+            return new Promise((resolve) => {
+                setTimeout(() => resolve(null), 200);
+            })
         }
     }
 
@@ -132,7 +138,7 @@ class App extends React.Component {
             <br/>
 
             <Button type="primary" onClick={() => {
-                this.field.validate((errors, values) => {
+                this.field.validatePromise().then(({errors, values}) => {
                     console.log(errors, values);
                 });
             }}>validate</Button>

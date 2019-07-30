@@ -12,7 +12,8 @@ autoUnmount is true by default, and data will be deleted automatically. Field wi
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Input, Button, Field } from '@alifd/next';
+import { Input, Button } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 class Demo extends React.Component {
