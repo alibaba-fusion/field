@@ -13,7 +13,8 @@ custom `value` by api `getValueFromEvent`
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Button, Input, Field } from '@alifd/next';
+import { Button, Input } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 class App extends React.Component {

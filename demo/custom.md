@@ -18,7 +18,8 @@ order: 10
 ````jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Button, Field } from '@alifd/next';
+import { Button } from '@alifd/next';
+import Field from '@alifd/field';
 
 
 class Custom extends React.Component {

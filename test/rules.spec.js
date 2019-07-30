@@ -11,7 +11,7 @@ Enzyme.configure({ adapter: new Adapter() });
 
 /* global describe it */
 describe('rules', () => {
-    it('required', function(done) {
+    it('required - validate', function(done) {
         const field = new Field(this);
         const inited = field.init('input', {
             rules: [
@@ -41,6 +41,68 @@ describe('rules', () => {
 
         done();
     });
+
+    it('required - validatePromise - callback', function(done) {
+        const field = new Field(this);
+        const inited = field.init('input', {
+            rules: [
+                {
+                    required: true,
+                    message: 'cant be null',
+                },
+            ],
+        });
+
+        const wrapper = mount(<Input {...inited} />);
+        wrapper.find('input').simulate('change', {
+            target: {
+                value: '',
+            },
+        });
+
+        assert(field.getError('input')[0] === 'cant be null');
+
+        // validator can't callback when option.rules is an empty Array
+        mount(<Input {...field.init('input', { rules: [] })} />);
+
+        const callback = sinon.spy();
+        field.validatePromise(callback);
+
+        assert(callback.calledOnce === true);
+
+        done();
+    });
+
+    it('required - validatePromise', function(done) {
+        const field = new Field(this);
+        const inited = field.init('input', {
+            rules: [
+                {
+                    required: true,
+                    message: 'cant be null',
+                },
+            ],
+        });
+
+        const wrapper = mount(<Input {...inited} />);
+        wrapper.find('input').simulate('change', {
+            target: {
+                value: '',
+            },
+        });
+
+        assert(field.getError('input')[0] === 'cant be null');
+
+        // validator can't callback when option.rules is an empty Array
+        mount(<Input {...field.init('input', { rules: [] })} />);
+
+        field.validatePromise()
+            .then(() => {
+                done();
+            })
+            
+    });
+
     it('triger', function(done) {
         const field = new Field(this);
         const inited = field.init('input', {
