@@ -22,7 +22,7 @@ class Field {
         return new Field(com, options);
     }
 
-    static useField({ useState, useMemo }) {
+    static getUseField({ useState, useMemo }) {
         return function(options = {}) {
             const [, setState] = useState();
 

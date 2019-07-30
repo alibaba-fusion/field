@@ -3,11 +3,11 @@ title: Functional Component with React Hooks
 order: 12
 ---
 
-`useField` requires a `useState` implementation from React or Rax. Extend the `Field` Component and override `useField`.
+`getUseField` requires `useState` and `useMemo` implementation from React or Rax. Extend the `Field` Component and add a `useField` static method.
 
 `
 static useField(...args) {
-    return super.useField(useState)(...args);
+    return this.getUseField(useState)(...args);
 }
 `
 
@@ -20,7 +20,7 @@ import Field from '@alifd/field';
 
 class myField extends Field {
     static useField(...args) {
-        return super.useField({useState, useMemo})(...args);
+        return this.getUseField({useState, useMemo})(...args);
     }
 }
 
