@@ -79,7 +79,8 @@ class Field {
             'getErrors',
             'setError',
             'setErrors',
-            'validate',
+            'validateCallback',
+            'validatePromise',
             'getState',
             'reset',
             'resetToDefault',
@@ -514,7 +515,7 @@ class Field {
      * @param {Array} ns names
      * @param {Function} cb callback after validate
      */
-    validate(ns, cb) {
+    validateCallback(ns, cb) {
         const { names, callback } = getParams(ns, cb);
         const fieldNames = names || this.getNames();
 

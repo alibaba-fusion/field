@@ -35,7 +35,7 @@ describe('rules', () => {
         mount(<Input {...field.init('input', { rules: [] })} />);
 
         const callback = sinon.spy();
-        field.validate(callback);
+        field.validateCallback(callback);
 
         assert(callback.calledOnce === true);
 
