@@ -151,6 +151,11 @@ type InitOption<T = string> = {
     getValueFromEvent?: (eventArgs: object) => T;
 };
 
+type ValidateResults = {
+    errors: object[],
+    values: object
+}
+
 export default class Field {
     /**
      *
@@ -200,23 +205,37 @@ export default class Field {
 
     /**
      * 校验
-     * @param names
-     * @param options
      * @param callback
      */
-    validate<T>(callback?: (errors: object[], values: T) => void): void;
+    validateCallback(callback?: (errors: object[], values: ValidateResults) => void): void;
 
     /**
      * 校验
      * @param names
-     * @param options
      * @param callback
      */
-    validate<T>(
-        names?: string[],
-        options?: object,
-        callback?: (errors: object[], values: T) => void
+    validateCallback(
+        names?: string[] | string,
+        callback?: (errors: object[], values: ValidateResults) => void
     ): void;
+
+    /**
+     * 校验
+     * @param names
+     * @param callback
+     */
+    validatePromise(
+        names?: string[] | string,
+        callback?: (errors: object[], values: ValidateResults) => Promise<any>
+    ): Promise<ValidateResults>;
+
+    /**
+     * 校验
+     * @param names
+     */
+    validatePromise(
+        names?: string[] | string,
+    ): Promise<ValidateResults>;
 
     /**
      * 校验并获取一组输入域的值与Error对象
@@ -230,7 +249,7 @@ export default class Field {
      * 	获取单个输入控件的值
      * @param 字段名
      */
-    getValue<T = string>(name: string): T;
+    getValue<T>(name: string): T;
 
     /**
      * 获取一组输入控件的值，如不传入参数，则获取全部组件的值

@@ -145,7 +145,7 @@ describe('options', () => {
                         />
                         <button
                             onClick={() => {
-                                this.field.validate(error => {
+                                this.field.validateCallback(error => {
                                     assert(
                                         error.input.errors[0] === 'cant be null'
                                     );
@@ -635,7 +635,7 @@ describe('options', () => {
 
             assert(field.getError('input') === null);
 
-            field.validate('input');
+            field.validateCallback('input');
             assert(field.getError('input') !== null);
 
             done();
@@ -656,7 +656,7 @@ describe('options', () => {
 
             assert(field.getError('input') === null);
 
-            field.validate('input');
+            field.validateCallback('input');
             assert(field.getError('input') !== null);
 
             done();
@@ -670,7 +670,7 @@ describe('options', () => {
             const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
 
             wrapper = mount(<Input {...inited} />);
-            field.validate();
+            field.validateCallback();
 
             assert(mySpy.calledOnce);
             assert(mySpy.args[0][0] === 'my error message');
@@ -685,7 +685,7 @@ describe('options', () => {
             const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
 
             wrapper = mount(<Input {...inited} />);
-            field.validate();
+            field.validateCallback();
 
             assert(mySpy.calledOnce);
             assert.equal(mySpy.args[0][0].errorsGroup.input.errors, 'my error message');

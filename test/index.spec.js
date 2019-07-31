@@ -538,7 +538,7 @@ describe('field', () => {
             const wrapper = mount(<Input {...inited} />);
 
             field.setError('input', 'my error');
-            field.validate((err) => {
+            field.validateCallback((err) => {
                 assert(err.input.errors.length === 1);
                 assert(err.input.errors[0] === 'cant be null');
 
@@ -761,13 +761,13 @@ describe('field', () => {
                 },
             });
 
-            // field.validate((error) => {
+            // field.validateCallback((error) => {
             //     assert(error.input.errors[0] === 'cant be null');
             // });
-            // field.validate('input', (error) => {
+            // field.validateCallback('input', (error) => {
             //     assert(error.input.errors[0] === 'cant be null');
             // });
-            // field.validate(['input'], (error) => {
+            // field.validateCallback(['input'], (error) => {
             //     assert(error.input.errors[0] === 'cant be null');
             // });
 
@@ -780,12 +780,12 @@ describe('field', () => {
                     },
                 ],
             });
-            field.validate(['input2'], (error) => {
+            field.validateCallback(['input2'], (error) => {
                 assert(error === null);
             });
 
             // field.init('input3', {initValue:0, rules: [{required: true, message:'cant be 0' }]});
-            // field.validate(['input3'], (error, value, cb)=> {
+            // field.validateCallback(['input3'], (error, value, cb)=> {
             //     assert(error === 'cant be 0');
             // })
 
@@ -798,7 +798,7 @@ describe('field', () => {
             const wrapper = mount(<Input {...inited} />);
             
             field.setError('input', 'my error');
-            field.validate('input', (err) => {
+            field.validateCallback('input', (err) => {
                 assert(err.input.errors[0] === 'my error');
                 wrapper.unmount();
                 done();
@@ -815,7 +815,7 @@ describe('field', () => {
             const wrapper2 = mount(<Input {...inited2} />);
 
             field.setError('input', 'my error');
-            field.validate((err) => {
+            field.validateCallback((err) => {
                 assert(err.input.errors[0] === 'my error');
                 assert(err.input2.errors[0] === 'cant be null');
 
