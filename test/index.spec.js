@@ -879,7 +879,7 @@ describe('field', () => {
             });
         });
 
-        it.skip('should return non-inited values when name passed', function(done) {
+        it('should return non-inited values when name passed', function(done) {
             const field = new Field(this);
 
             field.setValue('input', 1);
@@ -1077,7 +1077,7 @@ describe('field', () => {
                 assert.deepEqual(values, { input: 1, input2: 123 });
             });
     
-            it.skip('should return non-inited values when name passed', async function() {
+            it('should return non-inited values when name passed', async function() {
                 const field = new Field(this);
     
                 field.setValue('input', 1);
@@ -1308,7 +1308,7 @@ describe('field', () => {
                 assert.deepEqual(values, { input: 1, input2: 123 });
             });
     
-            it.skip('should return non-inited values when name passed', async function() {
+            it('should return non-inited values when name passed', async function() {
                 const field = new Field(this);
     
                 field.setValue('input', 1);

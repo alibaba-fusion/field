@@ -594,7 +594,11 @@ class Field {
             for (let i = 0; i < fieldNames.length; i++) {
                 const name = fieldNames[i];
                 const field = this._get(name);
-                if (field.rules && !(errorsGroup && name in errorsGroup)) {
+                if (
+                    field &&
+                    field.rules &&
+                    !(errorsGroup && name in errorsGroup)
+                ) {
                     field.state = 'success';
                 }
             }
@@ -711,11 +715,13 @@ class Field {
             // update error in every Field
             Object.keys(errorsGroup).forEach(i => {
                 const field = this._get(i);
-                field.errors = getErrorStrs(
-                    errorsGroup[i].errors,
-                    this.processErrorMessage
-                );
-                field.state = 'error';
+                if (field) {
+                    field.errors = getErrorStrs(
+                        errorsGroup[i].errors,
+                        this.processErrorMessage
+                    );
+                    field.state = 'error';
+                }
             });
         }
 
@@ -729,7 +735,7 @@ class Field {
         for (let i = 0; i < fieldNames.length; i++) {
             const name = fieldNames[i];
             const field = this._get(name);
-            if (field.rules && !(errorsGroup && name in errorsGroup)) {
+            if (field && field.rules && !(errorsGroup && name in errorsGroup)) {
                 field.state = 'success';
             }
         }
