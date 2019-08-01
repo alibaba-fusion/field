@@ -544,7 +544,8 @@ class Field {
 
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
-            callback && callback(errors, this.getValues(fieldNames));
+            callback &&
+                callback(errors, this.getValues(names ? fieldNames : []));
             return;
         }
 
@@ -599,7 +600,8 @@ class Field {
             }
 
             // eslint-disable-next-line callback-return
-            callback && callback(errorsGroup, this.getValues(fieldNames));
+            callback &&
+                callback(errorsGroup, this.getValues(names ? fieldNames : []));
             this._reRender();
 
             if (typeof this.afterValidateRerender === 'function') {
@@ -653,9 +655,15 @@ class Field {
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
             if (callback) {
-                return callback({ errors, values: this.getValues(fieldNames) });
+                return callback({
+                    errors,
+                    values: this.getValues(names ? fieldNames : []),
+                });
             } else {
-                return { errors, values: this.getValues(fieldNames) };
+                return {
+                    errors,
+                    values: this.getValues(names ? fieldNames : []),
+                };
             }
         }
 
@@ -670,7 +678,7 @@ class Field {
 
         let callbackResults = {
             errors: errorsGroup,
-            values: this.getValues(fieldNames),
+            values: this.getValues(names ? fieldNames : []),
         };
         try {
             if (callback) {
