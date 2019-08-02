@@ -157,7 +157,19 @@ class Field {
         }
 
         if (!('value' in field)) {
-            field.value = defaultValue;
+            if (parseName) {
+                const cachedValue = getIn(this.values, name);
+                field.value =
+                    typeof cachedValue !== 'undefined'
+                        ? cachedValue
+                        : defaultValue;
+            } else {
+                const cachedValue = this.values[name];
+                field.value =
+                    typeof cachedValue !== 'undefined'
+                        ? cachedValue
+                        : defaultValue;
+            }
         }
         if (parseName && !getIn(this.values, name)) {
             this.values = setIn(this.values, name, field.value);
@@ -544,7 +556,8 @@ class Field {
 
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
-            callback && callback(errors, this.getValues(fieldNames));
+            callback &&
+                callback(errors, this.getValues(names ? fieldNames : []));
             return;
         }
 
@@ -593,13 +606,18 @@ class Field {
             for (let i = 0; i < fieldNames.length; i++) {
                 const name = fieldNames[i];
                 const field = this._get(name);
-                if (field.rules && !(errorsGroup && name in errorsGroup)) {
+                if (
+                    field &&
+                    field.rules &&
+                    !(errorsGroup && name in errorsGroup)
+                ) {
                     field.state = 'success';
                 }
             }
 
             // eslint-disable-next-line callback-return
-            callback && callback(errorsGroup, this.getValues(fieldNames));
+            callback &&
+                callback(errorsGroup, this.getValues(names ? fieldNames : []));
             this._reRender();
 
             if (typeof this.afterValidateRerender === 'function') {
@@ -653,9 +671,15 @@ class Field {
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
             if (callback) {
-                return callback({ errors, values: this.getValues(fieldNames) });
+                return callback({
+                    errors,
+                    values: this.getValues(names ? fieldNames : []),
+                });
             } else {
-                return { errors, values: this.getValues(fieldNames) };
+                return {
+                    errors,
+                    values: this.getValues(names ? fieldNames : []),
+                };
             }
         }
 
@@ -670,7 +694,7 @@ class Field {
 
         let callbackResults = {
             errors: errorsGroup,
-            values: this.getValues(fieldNames),
+            values: this.getValues(names ? fieldNames : []),
         };
         try {
             if (callback) {
@@ -703,11 +727,13 @@ class Field {
             // update error in every Field
             Object.keys(errorsGroup).forEach(i => {
                 const field = this._get(i);
-                field.errors = getErrorStrs(
-                    errorsGroup[i].errors,
-                    this.processErrorMessage
-                );
-                field.state = 'error';
+                if (field) {
+                    field.errors = getErrorStrs(
+                        errorsGroup[i].errors,
+                        this.processErrorMessage
+                    );
+                    field.state = 'error';
+                }
             });
         }
 
@@ -721,7 +747,7 @@ class Field {
         for (let i = 0; i < fieldNames.length; i++) {
             const name = fieldNames[i];
             const field = this._get(name);
-            if (field.rules && !(errorsGroup && name in errorsGroup)) {
+            if (field && field.rules && !(errorsGroup && name in errorsGroup)) {
                 field.state = 'success';
             }
         }
