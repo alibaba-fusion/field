@@ -748,7 +748,7 @@ describe('field', () => {
     })
 
     describe('validate', function() {
-        it('validate', function(done) {
+        it('should return no errors', function(done) {
             const field = new Field(this);
             const inited = field.init('input', {
                 rules: [{ required: true, message: 'cant be null' }],
@@ -761,16 +761,6 @@ describe('field', () => {
                 },
             });
 
-            // field.validateCallback((error) => {
-            //     assert(error.input.errors[0] === 'cant be null');
-            // });
-            // field.validateCallback('input', (error) => {
-            //     assert(error.input.errors[0] === 'cant be null');
-            // });
-            // field.validateCallback(['input'], (error) => {
-            //     assert(error.input.errors[0] === 'cant be null');
-            // });
-
             field.init('input2', {
                 initValue: 123,
                 rules: [
@@ -781,15 +771,9 @@ describe('field', () => {
                 ],
             });
             field.validateCallback(['input2'], (error) => {
-                assert(error === null);
+                assert.strictEqual(error, null);
+                done();
             });
-
-            // field.init('input3', {initValue:0, rules: [{required: true, message:'cant be 0' }]});
-            // field.validateCallback(['input3'], (error, value, cb)=> {
-            //     assert(error === 'cant be 0');
-            // })
-
-            done();
         });
 
         it('should show setError on validate', function(done) {
@@ -821,6 +805,96 @@ describe('field', () => {
 
                 wrapper.unmount();
                 wrapper2.unmount();
+                done();
+            });
+        });
+
+        it('should return value for passed `inited` field name', function(done) {
+            const field = new Field(this);
+            const inited = field.init('input', {
+                rules: [{ required: true, message: 'cant be null' }],
+            });
+
+            const wrapper = mount(<Input {...inited} />);
+            wrapper.find('input').simulate('change', {
+                target: {
+                    value: '',
+                },
+            });
+
+            field.init('input2', {
+                initValue: 123,
+                rules: [
+                    {
+                        required: true,
+                        message: 'cant be 0',
+                    },
+                ],
+            });
+            field.validateCallback(['input2'], (error, values) => {
+                assert.deepEqual(values, { input2: 123 });
+                done();
+            });
+        });
+
+        it('should return all inited values when no names passed', function(done) {
+            const field = new Field(this);
+            field.init('input', {
+                initValue: 1,
+                rules: [{ required: true, message: 'cant be null' }],
+            });
+
+            field.init('input2', {
+                initValue: 123,
+                rules: [
+                    {
+                        required: true,
+                        message: 'cant be 0',
+                    },
+                ],
+            });
+            field.validateCallback((error, values) => {
+                assert.deepEqual(values, { input: 1, input2: 123 });
+                done();
+            });
+        });
+
+        it('should return non-inited values when no names passed', function(done) {
+            const field = new Field(this);
+
+            field.setValue('input', 1);
+
+            field.init('input2', {
+                initValue: 123,
+                rules: [
+                    {
+                        required: true,
+                        message: 'cant be 0',
+                    },
+                ],
+            });
+            field.validateCallback((error, values) => {
+                assert.deepEqual(values, { input: 1, input2: 123 });
+                done();
+            });
+        });
+
+        it('should return non-inited values when name passed', function(done) {
+            const field = new Field(this);
+
+            field.setValue('input', 1);
+
+            field.init('input2', {
+                initValue: 123,
+                rules: [
+                    {
+                        required: true,
+                        message: 'cant be 0',
+                    },
+                ],
+            });
+            field.validateCallback(['input', 'input2'], (error, values) => {
+                assert.deepEqual(values, { input: 1, input2: 123 });
                 done();
             });
         });
@@ -935,6 +1009,91 @@ describe('field', () => {
     
                 wrapper.unmount();
                 wrapper2.unmount();
+            });
+
+            it('should return value for passed `inited` field name', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+                const { values } = await field.validatePromise(['input2']);
+                assert.deepEqual(values, { input2: 123 });
+            });
+    
+            it('should return all inited values when no names passed', async function() {
+                const field = new Field(this);
+                field.init('input', {
+                    initValue: 1,
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise();
+                assert.deepEqual(values, { input: 1, input2: 123 });
+            });
+    
+            it('should return non-inited values when no names passed', async function() {
+                const field = new Field(this);
+    
+                field.setValue('input', 1);
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise();
+                assert.deepEqual(values, { input: 1, input2: 123 });
+            });
+    
+            it('should return non-inited values when name passed', async function() {
+                const field = new Field(this);
+    
+                field.setValue('input', 1);
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise(['input', 'input2']);
+                assert.deepEqual(values, { input: 1, input2: 123 });
             });
         })
         
@@ -1070,6 +1229,105 @@ describe('field', () => {
     
                 wrapper.unmount();
                 wrapper2.unmount();
+            });
+
+            it('should return value for passed `inited` field name', async function() {
+                const field = new Field(this);
+                const inited = field.init('input', {
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                const wrapper = mount(<Input {...inited} />);
+                wrapper.find('input').simulate('change', {
+                    target: {
+                        value: '',
+                    },
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise(['input2'], ({ values }) => {
+                    return Promise.resolve({values})
+                });
+                
+                assert.deepEqual(values, { input2: 123 });
+            });
+    
+            it('should return all inited values when no names passed', async function() {
+                const field = new Field(this);
+                field.init('input', {
+                    initValue: 1,
+                    rules: [{ required: true, message: 'cant be null' }],
+                });
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise(({ values }) => {
+                    return Promise.resolve({values})
+                });
+                
+                assert.deepEqual(values, { input: 1, input2: 123 });
+            });
+    
+            it('should return non-inited values when no names passed', async function() {
+                const field = new Field(this);
+    
+                field.setValue('input', 1);
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+
+                const { values } = await field.validatePromise(({ values }) => {
+                    return Promise.resolve({values})
+                });
+                
+                assert.deepEqual(values, { input: 1, input2: 123 });
+            });
+    
+            it('should return non-inited values when name passed', async function() {
+                const field = new Field(this);
+    
+                field.setValue('input', 1);
+    
+                field.init('input2', {
+                    initValue: 123,
+                    rules: [
+                        {
+                            required: true,
+                            message: 'cant be 0',
+                        },
+                    ],
+                });
+
+                const { values } = await field.validatePromise(['input', 'input2'], ({ values }) => {
+                    return Promise.resolve({values})
+                });
+                
+                assert.deepEqual(values, { input: 1, input2: 123 });
             });
         })
     });
