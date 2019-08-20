@@ -51,11 +51,11 @@ class App extends React.Component {
     userName(rule, value) {
         if (value === 'frank') {
             return new Promise((resolve, reject) => {
-                setTimeout(() => resolve('name existed'), 200);
+                setTimeout(() => reject('name existed'), 200);
             })
         } else {
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(null), 200);
+            return new Promise((resolve, reject) => {
+                setTimeout(() => reject(), 200);
             })
         }
     }
