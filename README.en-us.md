@@ -191,7 +191,7 @@ Let myfield = new Field(this [,options]);
 | autoValidate | Automatically validate while value changed | Boolean  |true|
 | values | initial value| Object ||
 | processErrorMessage | function to transform error objects on validation. Main usage is to add `key` prop to React component | Function(error) ||
-| afterValidateRerender | function to perform any operations after components have rerendered to show validation results. | Function({errorGroup, options, instance}) - see [here](#afterValidateRerender) for more information ||
+| afterValidateRerender | function to perform any operations after components have rerendered to show validation results. | Function({errorGroup, options, instance}) - see [afterValidateRerender](#afterValidateRerender) for more information ||
 
 
 #### API Interface
@@ -204,7 +204,8 @@ The api interface provided by the object after `new` (eg `myfield.getValues()`) 
 | getValue | get the value of a single input control | Function(name: String) |
 | setValues ​​| Sets the value of a set of input controls (triggers render, follow the use of react time) | Function(obj: Object) |
 | setValue | Sets the value of a single input control (triggers render, follow the use of react time) | Function(name: String, value) |
-| Validate | Validate and retrieve the values ​​of a set of input fields and Error | Function([names: String[]], [options: Object], callback: Function(errors, values)) | | |
+| validateCallback | Validate and retrieve the values ​​of a set of input fields and Error. | Function([names: String[]], [options: Object], callback: Function(errors, values)) | | |
+| validatePromise | Validate and retrieve the values ​​of a set of input fields and Error. Returns a promise| Function([names: String[]], [options: Object], (optional) callback: Function(errors, values)) | | |
 |getError | Get Error of a Single Input Control | Function(name: String) | | |
 |getErrors | Get Errors of a Group of Input Controls | Function([name: String]) | | |
 |setError | Set Error for a Single Input Control | Function(name: String, errors:String/Array[String]) | | |

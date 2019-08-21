@@ -127,11 +127,8 @@ class Field {
         if (typeof initValue !== 'undefined') {
             defaultValue = initValue;
         } else if (typeof originalProps[defaultValueName] !== 'undefined') {
+            // here use typeof, in case of defaultValue={0}
             defaultValue = originalProps[defaultValueName];
-        } else if (parseName) {
-            defaultValue = getIn(this.values, name);
-        } else if (this.values && typeof this.values[name] !== 'undefined') {
-            defaultValue = this.values[name];
         }
 
         Object.assign(field, {
@@ -144,11 +141,11 @@ class Field {
             ref: originalProps.ref,
         });
 
-        // Controlled Component
+        // Controlled Component, should always equal props.value
         if (valueName in originalProps) {
             field.value = originalProps[valueName];
 
-            // When rerendering set the values
+            // When rerendering set the values from props.value
             if (parseName) {
                 this.values = setIn(this.values, name, field.value);
             } else {
@@ -156,6 +153,12 @@ class Field {
             }
         }
 
+        // should get value from this.values
+        /**
+         * a new field (value not in field)
+         * step 1: get value from this.values
+         * step 2: from defaultValue
+         */
         if (!('value' in field)) {
             if (parseName) {
                 const cachedValue = getIn(this.values, name);
@@ -171,6 +174,7 @@ class Field {
                         : defaultValue;
             }
         }
+
         if (parseName && !getIn(this.values, name)) {
             this.values = setIn(this.values, name, field.value);
         } else if (!parseName && !this.values[name]) {

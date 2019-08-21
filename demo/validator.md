@@ -132,7 +132,7 @@ class App extends React.Component {
             <br/>
 
             <Button type="primary" onClick={() => {
-                this.field.validate((errors, values) => {
+                this.field.validateCallback((errors, values) => {
                     console.log(errors, values);
                 });
             }}>validate</Button>
