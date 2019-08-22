@@ -19,21 +19,16 @@ const initMeta = {
 
 class Field {
     static create(com, options = {}) {
-        return new Field(com, options);
+        return new this(com, options);
     }
 
     static getUseField({ useState, useMemo }) {
-        return function(options = {}) {
+        return (options = {}) => {
             const [, setState] = useState();
 
-            const field = useMemo(() => {
-                return new Field(
-                    {
-                        setState,
-                    },
-                    options
-                );
-            }, [setState]);
+            const field = useMemo(() => this.create({ setState }, options), [
+                setState,
+            ]);
 
             return field;
         };
