@@ -14,12 +14,28 @@ const FormItem = Form.Item;
 /* eslint-disable react/jsx-filename-extension */
 /*global describe it afterEach */
 describe('field', () => {
-    it('should create new field with `Field.create`', function() {
-        const field = Field.create(this);
+    describe('Field.create', function() {
+        it('should create new field', function() {
+            const field = Field.create(this);
 
-        assert(!!field);
-        assert(Field.prototype.isPrototypeOf(field));
+            assert(!!field);
+            assert(Field.prototype.isPrototypeOf(field));
+        })
+
+        it('should have subclass prototype', function() {
+            class myField extends Field {
+                constructor(com, options = {}) {
+                    super(com, options);
+                }
+            }
+            const field = myField.create(this);
+
+            assert(!!field);
+            assert(myField.prototype.isPrototypeOf(field));
+        })
+
     })
+
     describe('render', () => {
         it('should support Form', function(done) {
             class Demo extends React.Component {
