@@ -1,15 +1,5 @@
 import Validate from '@alifd/validate';
-import {
-    log,
-    func,
-    getValueFromEvent,
-    getErrorStrs,
-    getParams,
-    setIn,
-    getIn,
-    deleteIn,
-    mapValidateRules,
-} from './utils';
+import { getValueFromEvent, getErrorStrs, getParams, setIn, getIn, deleteIn, mapValidateRules, warning } from './utils';
 
 const initMeta = {
     state: '',
@@ -26,9 +16,7 @@ class Field {
         return (options = {}) => {
             const [, setState] = useState();
 
-            const field = useMemo(() => this.create({ setState }, options), [
-                setState,
-            ]);
+            const field = useMemo(() => this.create({ setState }, options), [setState]);
 
             return field;
         };
@@ -36,9 +24,7 @@ class Field {
 
     constructor(com, options = {}) {
         if (!com) {
-            log.warning(
-                '`this` is missing in `Field`, you should use like `new Field(this)`'
-            );
+            warning('`this` is missing in `Field`, you should use like `new Field(this)`');
         }
 
         this.com = com;
@@ -47,7 +33,8 @@ class Field {
         this.instance = {};
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
-        this.values = options.values || {};
+        this.values = Object.assign({}, options.values);
+
         this.processErrorMessage = options.processErrorMessage;
         this.afterValidateRerender = options.afterValidateRerender;
 
@@ -57,7 +44,7 @@ class Field {
                 forceUpdate: false,
                 scrollToFirstError: true,
                 first: false,
-                onChange: func.noop,
+                onChange: () => {},
                 autoUnmount: true,
                 autoValidate: true,
             },
@@ -84,10 +71,6 @@ class Field {
         ].forEach(m => {
             this[m] = this[m].bind(this);
         });
-
-        if (options.values) {
-            this.setValues(options.values, false);
-        }
     }
 
     setOptions(options) {
@@ -113,11 +96,7 @@ class Field {
         const { parseName } = this.options;
 
         const originalProps = Object.assign({}, props, rprops);
-        const defaultValueName = `default${valueName[0].toUpperCase()}${valueName.slice(
-            1
-        )}`;
-
-        const field = this._getInitMeta(name);
+        const defaultValueName = `default${valueName[0].toUpperCase()}${valueName.slice(1)}`;
         let defaultValue;
         if (typeof initValue !== 'undefined') {
             defaultValue = initValue;
@@ -126,11 +105,12 @@ class Field {
             defaultValue = originalProps[defaultValueName];
         }
 
+        // get field from this.fieldsMeta or new one
+        const field = this._getInitMeta(name);
         Object.assign(field, {
             valueName,
             initValue: defaultValue,
-            disabled:
-                'disabled' in originalProps ? originalProps.disabled : false,
+            disabled: 'disabled' in originalProps ? originalProps.disabled : false,
             getValueFromEvent,
             rules: Array.isArray(rules) ? rules : [rules],
             ref: originalProps.ref,
@@ -148,32 +128,28 @@ class Field {
             }
         }
 
-        // should get value from this.values
         /**
-         * a new field (value not in field)
-         * step 1: get value from this.values
-         * step 2: from defaultValue
+         * first init field (value not in field)
+         * should get field.value from this.values or defaultValue
          */
         if (!('value' in field)) {
             if (parseName) {
                 const cachedValue = getIn(this.values, name);
-                field.value =
-                    typeof cachedValue !== 'undefined'
-                        ? cachedValue
-                        : defaultValue;
+                if (typeof cachedValue !== 'undefined') {
+                    field.value = cachedValue;
+                } else if (typeof defaultValue !== 'undefined') {
+                    field.value = defaultValue;
+                    this.values = setIn(this.values, name, field.value);
+                }
             } else {
                 const cachedValue = this.values[name];
-                field.value =
-                    typeof cachedValue !== 'undefined'
-                        ? cachedValue
-                        : defaultValue;
+                if (typeof cachedValue !== 'undefined') {
+                    field.value = cachedValue;
+                } else if (typeof defaultValue !== 'undefined') {
+                    field.value = defaultValue;
+                    this.values[name] = field.value;
+                }
             }
-        }
-
-        if (parseName && !getIn(this.values, name)) {
-            this.values = setIn(this.values, name, field.value);
-        } else if (!parseName && !this.values[name]) {
-            this.values[name] = field.value;
         }
 
         // Component props
@@ -223,9 +199,7 @@ class Field {
      * props.onChange props.onBlur
      */
     _callPropsEvent(action, props, ...args) {
-        action in props &&
-            typeof props[action] === 'function' &&
-            props[action](...args);
+        action in props && typeof props[action] === 'function' && props[action](...args);
     }
 
     _getInitMeta(name) {
@@ -247,9 +221,7 @@ class Field {
             return;
         }
 
-        field.value = field.getValueFromEvent
-            ? field.getValueFromEvent.apply(this, others)
-            : getValueFromEvent(e);
+        field.value = field.getValueFromEvent ? field.getValueFromEvent.apply(this, others) : getValueFromEvent(e);
 
         if (this.options.parseName) {
             this.values = setIn(this.values, name, field.value);
@@ -312,11 +284,7 @@ class Field {
         // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
         if (autoUnmount && !this.fieldsMeta[name]) {
             this.fieldsMeta[name] = this._getCache(name, key);
-            this.setValue(
-                name,
-                this.fieldsMeta[name] && this.fieldsMeta[name].value,
-                false
-            );
+            this.setValue(name, this.fieldsMeta[name] && this.fieldsMeta[name].value, false);
         }
 
         // only one time here
@@ -364,10 +332,7 @@ class Field {
             },
             errors => {
                 if (errors && errors.length) {
-                    field.errors = getErrorStrs(
-                        errors,
-                        this.processErrorMessage
-                    );
+                    field.errors = getErrorStrs(errors, this.processErrorMessage);
                     field.state = 'error';
                 } else {
                     field.errors = [];
@@ -434,11 +399,7 @@ class Field {
                     this.fieldsMeta[name].value = value;
                 } else {
                     // if no value then copy values from fieldsMeta to keep initialized component data
-                    this.values = setIn(
-                        this.values,
-                        name,
-                        this.fieldsMeta[name].value
-                    );
+                    this.values = setIn(this.values, name, this.fieldsMeta[name].value);
                 }
             });
         }
@@ -455,10 +416,7 @@ class Field {
             };
         }
 
-        if (
-            this.fieldsMeta[name].errors &&
-            this.fieldsMeta[name].errors.length > 0
-        ) {
+        if (this.fieldsMeta[name].errors && this.fieldsMeta[name].errors.length > 0) {
             this.fieldsMeta[name].state = 'error';
         } else {
             this.fieldsMeta[name].state = '';
@@ -555,8 +513,7 @@ class Field {
 
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
-            callback &&
-                callback(errors, this.getValues(names ? fieldNames : []));
+            callback && callback(errors, this.getValues(names ? fieldNames : []));
             return;
         }
 
@@ -583,10 +540,7 @@ class Field {
                 // update error in every Field
                 Object.keys(errorsGroup).forEach(i => {
                     const field = this._get(i);
-                    field.errors = getErrorStrs(
-                        errorsGroup[i].errors,
-                        this.processErrorMessage
-                    );
+                    field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
                     field.state = 'error';
                 });
             }
@@ -594,29 +548,20 @@ class Field {
             const formattedGetErrors = this.formatGetErrors(fieldNames);
 
             if (formattedGetErrors) {
-                errorsGroup = Object.assign(
-                    {},
-                    formattedGetErrors,
-                    errorsGroup
-                );
+                errorsGroup = Object.assign({}, formattedGetErrors, errorsGroup);
             }
 
             // update to success which has no error
             for (let i = 0; i < fieldNames.length; i++) {
                 const name = fieldNames[i];
                 const field = this._get(name);
-                if (
-                    field &&
-                    field.rules &&
-                    !(errorsGroup && name in errorsGroup)
-                ) {
+                if (field && field.rules && !(errorsGroup && name in errorsGroup)) {
                     field.state = 'success';
                 }
             }
 
             // eslint-disable-next-line callback-return
-            callback &&
-                callback(errorsGroup, this.getValues(names ? fieldNames : []));
+            callback && callback(errorsGroup, this.getValues(names ? fieldNames : []));
             this._reRender();
 
             if (typeof this.afterValidateRerender === 'function') {
@@ -727,10 +672,7 @@ class Field {
             Object.keys(errorsGroup).forEach(i => {
                 const field = this._get(i);
                 if (field) {
-                    field.errors = getErrorStrs(
-                        errorsGroup[i].errors,
-                        this.processErrorMessage
-                    );
+                    field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
                     field.state = 'error';
                 }
             });
@@ -790,26 +732,12 @@ class Field {
         }
     }
 
-    reset(ns, backToDefault = false) {
-        if (ns === true) {
-            log.deprecated('reset(true)', 'resetToDefault()', 'Field');
-            this.resetToDefault();
-        } else if (backToDefault === true) {
-            log.deprecated('reset(ns,true)', 'resetToDefault(ns)', 'Field');
-            this.resetToDefault(ns);
-        } else {
-            this._reset(ns, false);
-        }
+    reset(ns) {
+        this._reset(ns, false);
     }
 
     resetToDefault(ns) {
         this._reset(ns, true);
-    }
-
-    // deprecated. TODO: remove in 2.0 version
-    isValidating(name) {
-        log.deprecated('isValidating', 'getState', 'Field');
-        return this.getState(name) === 'loading';
     }
 
     getNames() {
@@ -847,7 +775,7 @@ class Field {
      */
     spliceArray(keyMatch, startIndex) {
         if (keyMatch.indexOf('{index}') === -1) {
-            log.warning('{index} not find in key');
+            warning('{index} not find in key');
             return;
         }
 
