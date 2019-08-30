@@ -1,5 +1,15 @@
 # Field
 
+<p align="center">
+  <a href="https://www.npmjs.org/package/@alifd/field"><img src="https://img.shields.io/npm/v/@alifd/field.svg"></a>
+  <a href="https://www.npmjs.org/package/@alifd/field"><img src="https://img.shields.io/npm/dm/@alifd/field.svg"></a>
+  <a href="https://codecov.io/gh/alibaba-fusion/field"><img src="https://codecov.io/gh/alibaba-fusion/field/branch/master/graph/badge.svg"></a>
+  <a href="https://travis-ci.com/alibaba-fusion/field"><img src="https://travis-ci.com/alibaba-fusion/field.svg?branch=master"></a>
+  <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+  <a href="https://github.com/alibaba-fusion/field/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg"></a>
+  <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg"></a>
+</p>
+
 - category: Components
 -   family: DataEntry
 - chinese: 表单辅助工具
