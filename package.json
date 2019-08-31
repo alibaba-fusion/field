@@ -1,6 +1,6 @@
 {
   "name": "@alifd/field",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
   "files": [
     "demo/",

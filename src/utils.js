@@ -178,7 +178,6 @@ export function mapValidateRules(rules, defaultTrigger) {
 
 let warn = () => {};
 
-// don't print warning message when in production env or node runtime
 if (
     typeof process !== 'undefined' &&
     process.env &&
@@ -188,8 +187,8 @@ if (
 ) {
     warn = (...args) => {
         /* eslint-disable no-console */
-        if (typeof console !== 'undefined' && console.warn) {
-            console.warn(...args);
+        if (typeof console !== 'undefined' && console.error) {
+            console.error(...args);
         }
     };
 }
