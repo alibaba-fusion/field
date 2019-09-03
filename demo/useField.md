@@ -1,5 +1,5 @@
 ---
-title: Functional Component with React Hooks
+title: Hooks
 order: 12
 ---
 

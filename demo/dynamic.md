@@ -22,7 +22,7 @@ class Demo extends React.Component {
         super(props);
 
         this.state = {
-            tableSource: [1, 2, 3].map(i => {
+            tableSource: [0, 1, 2, 3].map(i => {
                 return { id: i };
             })
         };
@@ -54,7 +54,7 @@ class Demo extends React.Component {
         this.setState({ tableSource });
     }
 
-    input = (value, index) => <Input  {...this.field.init(`name.${index}`, { initValue: index })} />;
+    input = (value, index) => <Input  {...this.field.init(`name.${index}.input`, { initValue: index })} />;
     delete = (value, index) => <Button warning onClick={this.removeItem.bind(this, index)}>delete</Button>;
 
     render() {

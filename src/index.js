@@ -398,6 +398,7 @@ class Field {
                     // copy over values that are in this.values
                     this.fieldsMeta[name].value = value;
                 } else {
+                    // because of shallow merge
                     // if no value then copy values from fieldsMeta to keep initialized component data
                     this.values = setIn(this.values, name, this.fieldsMeta[name].value);
                 }
@@ -774,41 +775,66 @@ class Field {
      * @param {Number} startIndex index
      */
     spliceArray(keyMatch, startIndex) {
-        if (keyMatch.indexOf('{index}') === -1) {
-            warning('{index} not find in key');
+        if (keyMatch.match(/{index}$/) === -1) {
+            warning('key should match /{index}$/');
             return;
         }
 
         // regex to match field names in the same target array
         const reg = keyMatch.replace('{index}', '(\\d+)');
-        const keyReg = new RegExp(`^${reg}$`);
+        const keyReg = new RegExp(`^${reg}`);
 
-        let list = [];
+        const listMap = {};
+        /**
+         * keyMatch='key.{index}'
+         * case 1: names=['key.0', 'key.1'], should delete 'key.1'
+         * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
+         */
         const names = this.getNames();
         names.forEach(n => {
             // is name in the target array?
             const ret = keyReg.exec(n);
             if (ret) {
                 const index = parseInt(ret[1]);
+
                 if (index > startIndex) {
-                    list.push({
-                        index,
-                        name: n,
-                    });
+                    let l = listMap[index];
+                    const item = {
+                        from: n,
+                        to: `${keyMatch.replace('{index}', index - 1)}${n.replace(ret[0], '')}`,
+                    };
+                    if (!l) {
+                        listMap[index] = [item];
+                    } else {
+                        l.push(item);
+                    }
                 }
             }
         });
 
-        list = list.sort((a, b) => a.index < b.index);
+        const idxList = Object.keys(listMap)
+            .map(i => {
+                return {
+                    index: Number(i),
+                    list: listMap[i],
+                };
+            })
+            .sort((a, b) => a.index < b.index);
 
         // should be continuous array
-        if (list.length > 0 && list[0].index === startIndex + 1) {
-            list.forEach(l => {
-                const n = keyMatch.replace('{index}', l.index - 1);
-                const v = this.getValue(l.name);
-                this.setValue(n, v, false);
+        if (idxList.length > 0 && idxList[0].index === startIndex + 1) {
+            idxList.forEach(l => {
+                const list = l.list;
+                list.forEach(i => {
+                    const v = this.getValue(i.from); // get index value
+                    this.setValue(i.to, v, false); // set value to index - 1
+                });
             });
-            this.remove(list[list.length - 1].name);
+
+            const lastIdxList = idxList[idxList.length - 1];
+            lastIdxList.list.forEach(i => {
+                this.remove(i.from);
+            });
 
             let parentName = keyMatch.replace('.{index}', '');
             parentName = parentName.replace('[{index}]', '');
