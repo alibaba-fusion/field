@@ -68,6 +68,8 @@ class Field {
             'resetToDefault',
             'remove',
             'spliceArray',
+            'addArrayValue',
+            'deleteArrayValue',
         ].forEach(m => {
             this[m] = this[m].bind(this);
         });
@@ -769,12 +771,105 @@ class Field {
         });
     }
 
+    addArrayValue(key, index, ...argv) {
+        return this._spliceArrayValue(key, index, 0, ...argv);
+    }
+
+    deleteArrayValue(key, index, howmany = 1) {
+        return this._spliceArrayValue(key, index, howmany);
+    }
+
     /**
-     * splice in a Array
+     * splice array
+     * @param {String} key
+     * @param {Number} startIndex
+     * @param {Number} howmany
+     * @param {*} value
+     */
+    _spliceArrayValue(key, index, howmany, ...argv) {
+        const argc = argv.length;
+        const offset = howmany - argc;
+        const startIndex = index + howmany;
+
+        /**
+         * case 1: names=['key.0', 'key.1'], should delete 'key.1'
+         * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
+         */
+        const listMap = {};
+        const keyReg = new RegExp(`^${key}.(\\d+)`);
+        const replaceArgv = [];
+        const names = this.getNames();
+        names.forEach(n => {
+            const ret = keyReg.exec(n);
+            if (ret) {
+                const idx = parseInt(ret[1]);
+
+                if (idx >= startIndex) {
+                    let l = listMap[idx];
+                    const item = {
+                        from: n,
+                        to: `${key}.${idx - offset}${n.replace(ret[0], '')}`,
+                    };
+                    if (!l) {
+                        listMap[idx] = [item];
+                    } else {
+                        l.push(item);
+                    }
+                }
+
+                if (offset <= 0 && idx >= index && idx < index + argc) {
+                    replaceArgv.push(n);
+                }
+            }
+        });
+
+        const idxList = Object.keys(listMap)
+            .map(i => {
+                return {
+                    index: Number(i),
+                    list: listMap[i],
+                };
+            })
+            .sort((a, b) => (offset > 0 ? a.index - b.index : b.index - a.index));
+
+        // should be continuous array
+        if (idxList.length > 0) {
+            idxList.forEach(l => {
+                const list = l.list;
+                list.forEach(i => {
+                    this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
+                });
+            });
+
+            if (offset > 0) {
+                const removeList = idxList.slice(idxList.length - offset, idxList.length);
+                removeList.forEach(item => {
+                    item.list.forEach(i => {
+                        delete this.fieldsMeta[i.from];
+                    });
+                });
+            } else {
+                // will get from this.values while rerender
+                replaceArgv.forEach(i => {
+                    delete this.fieldsMeta[i];
+                });
+            }
+        }
+
+        const p = this.getValue(key);
+        if (p) {
+            p.splice(index, howmany, ...argv);
+        }
+
+        this._reRender();
+    }
+
+    /**
+     * splice in a Array [deprecated]
      * @param {String} keyMatch like name.{index}
      * @param {Number} startIndex index
      */
-    spliceArray(keyMatch, startIndex) {
+    spliceArray(keyMatch, startIndex, howmany) {
         if (keyMatch.match(/{index}$/) === -1) {
             warning('key should match /{index}$/');
             return;

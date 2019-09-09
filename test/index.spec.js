@@ -704,6 +704,118 @@ describe('field', () => {
                 assert(field.getValue('input').length === 2);
             });
         });
+        describe('addArrayValue && deleteArrayValue', function() {
+            it('should remove field item with value like [1,2]', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key.0', { initValue: 0 });
+                field.init('key.1', { initValue: 1 });
+                field.init('key.2', { initValue: 2 });
+
+                field.deleteArrayValue('key', 1);
+
+                assert(field.getValue('key.0') === 0);
+                assert(field.getValue('key.1') === 2);
+                assert(field.getValue('key.2') === undefined);
+
+                field.deleteArrayValue('key', 0);
+                assert(field.getValue('key.0') === 2);
+                assert(field.getValue('key.1') === undefined);
+                assert(field.getValue('key.2') === undefined);
+            });
+
+            it('should remove field item with value like [{id:1},{id:2}]', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key2.0.id', { initValue: 0 });
+                field.init('key2.1.id', { initValue: 1 });
+                field.init('key2.2.id', { initValue: 2 });
+
+                field.deleteArrayValue('key2', 1);
+
+                assert(field.getValue('key2.0.id') === 0);
+                assert(field.getValue('key2.1.id') === 2);
+                assert(field.getValue('key2.2.id') === undefined);
+
+                field.deleteArrayValue('key2', 0);
+                assert(field.getValue('key2.0.id') === 2);
+                assert(field.getValue('key2.1.id') === undefined);
+                assert(field.getValue('key2.2.id') === undefined);
+            });
+            it('should remove 2 field item with spliceValue(key,index,2)', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key.0', { initValue: 0 });
+                field.init('key.1', { initValue: 1 });
+                field.init('key.2', { initValue: 2 });
+                field.init('key.3', { initValue: 3 });
+
+                field.deleteArrayValue('key', 1, 2);
+
+                assert(field.getValue('key.0') === 0);
+                assert(field.getValue('key.1') === 3);
+                assert(field.getValue('key.2') === undefined);
+                assert(field.getValue('key.3') === undefined);
+
+                field.init('key2.0.id', { initValue: 0 });
+                field.init('key2.1.id', { initValue: 1 });
+                field.init('key2.2.id', { initValue: 2 });
+                field.init('key2.3.id', { initValue: 3 });
+
+                field.deleteArrayValue('key2', 1, 2);
+
+                assert(field.getValue('key2.0.id') === 0);
+                assert(field.getValue('key2.1.id') === 3);
+                assert(field.getValue('key2.2.id') === undefined);
+                assert(field.getValue('key2.3.id') === undefined);
+            });
+            it('should add 2 item with spliceValue(key,index, 0, ...argv)', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key.0', { initValue: 0 });
+                field.init('key.1', { initValue: 1 });
+                field.init('key.2', { initValue: 2 });
+
+                field.addArrayValue('key', 1, 100, 20);
+
+                assert(field.getValue('key.0') === 0);
+                assert(field.getValue('key.1') === 100);
+                assert(field.getValue('key.2') === 20);
+                assert(field.getValue('key.3') === 1);
+                assert(field.getValue('key.4') === 2);
+
+                field.init('key2.0.id', { initValue: 0 });
+                field.init('key2.1.id', { initValue: 1 });
+                field.init('key2.2.id', { initValue: 2 });
+
+                field.addArrayValue('key2', 1, {id: 100}, {id: 20});
+
+                assert(field.getValue('key2.0.id') === 0);
+                assert(field.getValue('key2.1.id') === 100);
+                assert(field.getValue('key2.2.id') === 20);
+                assert(field.getValue('key2.3.id') === 1);
+                assert(field.getValue('key2.4.id') === 2);
+
+            });
+            
+            it('should make no change `key` does not exist', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key.0', { initValue: 0 });
+                field.init('key.1', { initValue: 1 });
+                field.init('key.2', { initValue: 2 });
+
+                field._spliceArrayValue('notexist', 0, 0);
+                assert(field.getValue('key.0') === 0);
+                assert(field.getValue('key.1') === 1);
+                assert(field.getValue('key.2') === 2);
+
+                field.init('key2.0.id', { initValue: 0 });
+                field.init('key2.1.id', { initValue: 1 });
+                field.init('key2.2.id', { initValue: 2 });
+
+                field._spliceArrayValue('notexist', 1, 0);
+
+                assert(field.getValue('key2.0.id') === 0);
+                assert(field.getValue('key2.1.id') === 1);
+                assert(field.getValue('key2.2.id') === 2);
+            });
+        });
     });
 
     describe('getUseField', () => {
