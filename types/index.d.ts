@@ -1,4 +1,4 @@
-type FieldOption = {
+export type FieldOption = {
     /**
      * 所有组件的change都会到达这里[setValue不会触发该函数]
      */
@@ -17,37 +17,42 @@ type FieldOption = {
     forceUpdate?: boolean;
 
     /**
-     * field.validate的时候滚动到第一个出错的组件 (默认false, 1.0版本会改成true)
-     * @default false
+     * field.validate的时候滚动到第一个出错的组件, 如果是整数会进行偏移
+     * @default true
      */
     scrollToFirstError?: boolean;
 
     /**
-     * 自动删除(remove) Unmout 元素, getValues不会出现冗余数据
-     * @default false
+     * 自动删除(remove) Unmout 元素, 如果想保留数据可以设置为false
+     * @default true
      */
     autoUnmount?: boolean;
 
     /**
-     * 强制重置数据(设置所有数据为undefined，业务组件需要自己支持value=undefined情况清空数据)(版本要求>next@0.15)  (1.0版本会改成true)
-     * @default false
+     * 是否修改数据的时候就自动触发校验, 设为 false 后只能通过 validate() 来触发校验
+     * @default true
      */
-    deepReset?: boolean;
+    autoValidate?: boolean;
+
+    /**
+     * 初始化数据
+     */
+    values?: {};
 };
 
-type InitResult<T> = {
+export type InitResult<T> = {
     id: string;
     value: T;
     onChange(value: T): void;
 };
 
-type InitResult2<T, T2> = {
+export type InitResult2<T, T2> = {
     id: string;
     value: T;
     onChange(value: T, extra: T2): void;
 };
 
-type Rule = {
+export type Rule = {
     /**
      * 不能为空 (不能和pattern同时使用)
      * @default true
@@ -60,54 +65,41 @@ type Rule = {
     message?: string;
 
     /**
-     * 被校验数据类型(注意 type:'number' 表示数据类型为Number,而不是字符串形式的数字,字符串形式的数字请用pattern:/^[0-9]*$/) String/Array/url/email/...
-     */
-    type?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'method'
-        | 'regexp'
-        | 'integer'
-        | 'float'
-        | 'array'
-        | 'object'
-        | 'enum'
-        | 'date'
-        | 'url'
-        | 'hex'
-        | 'email'
-        | string;
-
-    /**
      * 校验正则表达式
      */
     pattern?: RegExp;
-
     /**
-     * 长度校验，如果max、mix混合配置，len的优先级最高
+     * 字符串最小长度 / 数组最小个数
      */
-    len?: number;
+    minLength?: number;
+    /**
+     * 字符串最大长度 / 数组最大个数
+     */
+    maxLength?: number;
 
     /**
-     * 字符最小长度
+     * 字符串精确长度 / 数组精确个数
+     */
+    length?: number;
+
+    /**
+     * 最小值
      */
     min?: number;
 
     /**
-     * 字符最大长度
+     * 最大值
      */
     max?: number;
-
     /**
-     * 是否进行空白字符校验（true进行校验)
+     * 对常用 pattern 的总结
      */
-    whitespace: boolean;
+    format?: 'url' | 'email' | 'tel' | 'number';
 
     /**
      * 自定义校验,(校验成功的时候不要忘记执行 callback(),否则会校验不返回)
      */
-    validator: (
+    validator?: (
         rule: Rule,
         value: string | number | object | boolean | Date | null,
         callback: (error?: string) => void
@@ -116,10 +108,10 @@ type Rule = {
     /**
      * 触发校验的事件名称
      */
-    trigger: 'onChange' | 'onBlur' | string;
+    trigger?: 'onChange' | 'onBlur' | string;
 };
 
-type InitOption<T = string> = {
+export type InitOption<T = any> = {
     /**
      * 组件值的属性名称，如 Checkbox 的是 checked，Input是 value
      */
@@ -128,10 +120,11 @@ type InitOption<T = string> = {
     /**
      * 组件初始值(组件第一次render的时候才会读取，后面再修改此值无效),类似defaultValue
      */
-    initValue?: T;
+    initValue?: T | T[];
 
     /**
      * 触发数据变化的事件名称
+     * @default 'onChange'
      */
     trigger?: string | 'onChange' | 'onBlur';
 
@@ -151,13 +144,13 @@ type InitOption<T = string> = {
     getValueFromEvent?: (eventArgs: object) => T;
 };
 
-type ValidateResults = {
+export type ValidateResults = {
     errors: object[],
     values: object
 }
 
-export default class Field {
-    /**
+export default class Field  {
+/**
      *
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
@@ -182,12 +175,12 @@ export default class Field {
     /**
      * 初始化每个组件
      */
-    init<T>(name: string, option?: InitOption): InitResult<T>;
+    init<T>(name: string, option?: InitOption, props?: {}): InitResult<T>;
 
     /**
      * 初始化每个组件
      */
-    init<T, T2>(name: string, option?: InitOption): InitResult2<T, T2>;
+    init<T, T2>(name: string, option?: InitOption, props?: {}): InitResult2<T, T2>;
 
     /**
      *
@@ -195,7 +188,13 @@ export default class Field {
      * @param names 重置的字段名
      * @param backToDefault
      */
-    reset(names?: String[], backToDefault?: InitOption): void;
+    reset(names?: string[] | string, backToDefault?: boolean): void;
+    /**
+     *
+     * 重置一组输入控件的值为默认值, 相当于reset(name, true)
+     * @param names 重置的字段名
+     */
+    resetToDefault(names?: string[] | string): void;
 
     /**
      * 删除某一个或者一组控件的数据，删除后与之相关的validate/value都会被清空
@@ -275,28 +274,38 @@ export default class Field {
     /**
      * 判断校验状态
      */
-    getState(name: String): 'error' | 'success' | 'validating';
+    getState(name: string): 'error' | 'success' | 'validating';
 
     /**
      * 获取单个输入控件的 Error
      */
-    getError(name: String): Error;
+    getError(name: string): Error;
 
     /**
      * 获取一组输入控件的 Error
      * @param names 字段名
      */
-    getErrors(names: string[]): Error;
+    getErrors(names?: string[]): Error;
 
     /**
      * 设置单个输入控件的 Error
      * @param name
      * @param errors
      */
-    setError(name: string, errors?: null | string[]): void;
+    setError(name: string, errors?: null | string[] | string): void;
 
     /**
      * 设置一组输入控件的 Error
      */
     setErrors(obj: object): void;
+
+    addArrayValue<T>(key: string, index: number, ...args: T[]): void;
+    /**
+     * 
+     * @param key 变量名
+     * @param index 数组的第几个
+     * @param howmany 删除几个，默认为1
+     */
+    deleteArrayValue(key: string, index: number, howmany?: number): void;
 }
+
