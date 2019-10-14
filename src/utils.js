@@ -3,10 +3,13 @@ export function getIn(state, name) {
         return state;
     }
 
-    const path = name
-        .replace(/\[/, '.')
-        .replace(/\]/, '')
-        .split('.');
+    const path =
+        typeof name === 'string'
+            ? name
+                  .replace(/\[/, '.')
+                  .replace(/\]/, '')
+                  .split('.')
+            : '';
     const length = path.length;
     if (!length) {
         return undefined;
@@ -49,10 +52,12 @@ export function setIn(state, name, value) {
     return setInWithPath(
         state,
         value,
-        name
-            .replace(/\[/, '.')
-            .replace(/\]/, '')
-            .split('.'),
+        typeof name === 'string'
+            ? name
+                  .replace(/\[/, '.')
+                  .replace(/\]/, '')
+                  .split('.')
+            : '',
         0
     );
 }
@@ -62,10 +67,13 @@ export function deleteIn(state, name) {
         return;
     }
 
-    const path = name
-        .replace(/\[/, '.')
-        .replace(/\]/, '')
-        .split('.');
+    const path =
+        typeof name === 'string'
+            ? name
+                  .replace(/\[/, '.')
+                  .replace(/\]/, '')
+                  .split('.')
+            : '';
     const length = path.length;
     if (!length) {
         return state;
