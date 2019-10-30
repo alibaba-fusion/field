@@ -19,33 +19,25 @@ import Field from '@alifd/field';
 
 
 class App extends React.Component {
-    field = new Field(this, {
-        parseName: true
-    });
+    field = new Field(this, {values: { input: 0}});
 
     onGetValue() {
-        console.log(this.field.getValues());
+        console.log(this.field.getValue('input'));
     }
 
     render() {
-        const { init, reset, resetToDefault } = this.field;
+        const { init, setValue, reset } = this.field;
 
         return (<div className="demo">
-            <h3>Object transfer</h3>
-            obj.b: <Input {...init('obj.arrd[0]', {initValue: undefined})} /> &nbsp;
-            obj.c: <Input {...init('obj.arrd[1]', {initValue: undefined})} />
-
-            result:
-            <pre>{JSON.stringify(this.field.getValues(), null, 2)}</pre>
-
+            <Input {...init('input')} />
             <br/><br/>
-
-            <Button type="primary" onClick={this.onGetValue.bind(this)}>getValues</Button>
+            <Button type="primary" onClick={this.onGetValue.bind(this)}>getValue</Button>
+            <Button type="primary" onClick={() => setValue('input', 'set me by click')}>setValue</Button>
             <Button onClick={() => reset()}>reset</Button>
-            <Button onClick={() => resetToDefault()}>resetToDefault</Button>
         </div>);
     }
 }
+
 
 ReactDOM.render(<App/>, mountNode);
 
