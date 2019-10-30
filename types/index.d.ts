@@ -184,11 +184,10 @@ export default class Field  {
 
     /**
      *
-     * 重置一组输入控件的值、清空校验, 第二个参数控制是否回到defaultValue
+     * 重置一组输入控件的值、清空校验
      * @param names 重置的字段名
-     * @param backToDefault
      */
-    reset(names?: string[] | string, backToDefault?: boolean): void;
+    reset(names?: string[] | string): void;
     /**
      *
      * 重置一组输入控件的值为默认值, 相当于reset(name, true)
