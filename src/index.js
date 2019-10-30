@@ -139,7 +139,8 @@ class Field {
                 const cachedValue = getIn(this.values, name);
                 if (typeof cachedValue !== 'undefined') {
                     field.value = cachedValue;
-                } else if (typeof defaultValue !== 'undefined') {
+                } else {
+                    // save struct to this.values even defaultValue is undefiend
                     field.value = defaultValue;
                     this.values = setIn(this.values, name, field.value);
                 }
@@ -148,6 +149,7 @@ class Field {
                 if (typeof cachedValue !== 'undefined') {
                     field.value = cachedValue;
                 } else if (typeof defaultValue !== 'undefined') {
+                    // should be same with parseName, but compatible with old versions
                     field.value = defaultValue;
                     this.values[name] = field.value;
                 }
