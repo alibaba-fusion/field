@@ -49,6 +49,10 @@
     "@alifd/next": "^1.15.12",
     "@commitlint/cli": "^8.1.0",
     "babel-eslint": "^10.0.2",
+    "babel-plugin-transform-jsx-list": "^0.1.0",
+    "babel-plugin-transform-object-assign": "^6.22.0",
+    "babel-plugin-transform-proto-to-assign": "^6.26.0",
+    "babel-plugin-transform-react-es6-displayname": "^1.0.0-beta1.4",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.14.0",
     "es6-promise-polyfill": "^1.2.0",
@@ -81,7 +85,7 @@
       "表单"
     ]
   },
-  "homepage": "https://unpkg.com/@alifd/field@1.2.1/build/index.html",
+  "homepage": "https://unpkg.com/@alifd/field@1.3.3/build/index.html",
   "bugs": "https://github.com/alibaba-fusion/field/issues",
   "publishConfig": {
     "access": "public"
