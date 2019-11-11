@@ -798,19 +798,19 @@ class Field {
          * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
          */
         const listMap = {};
-        const keyReg = new RegExp(`^${key}.(\\d+)`);
+        const keyReg = new RegExp(`^(${key}.)(\\d+)`);
         const replaceArgv = [];
         const names = this.getNames();
         names.forEach(n => {
             const ret = keyReg.exec(n);
             if (ret) {
-                const idx = parseInt(ret[1]);
+                const idx = parseInt(ret[2]);
 
                 if (idx >= startIndex) {
                     let l = listMap[idx];
                     const item = {
                         from: n,
-                        to: `${key}.${idx - offset}${n.replace(ret[0], '')}`,
+                        to: n.replace(keyReg, (match, p1) => `${p1}${idx - offset}`),
                     };
                     if (!l) {
                         listMap[idx] = [item];
