@@ -286,7 +286,7 @@ class Field {
         }
 
         // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
-        if (autoUnmount && !this.fieldsMeta[name]) {
+        if (autoUnmount && !this.fieldsMeta[name] && this._getCache(name, key)) {
             this.fieldsMeta[name] = this._getCache(name, key);
             this.setValue(name, this.fieldsMeta[name] && this.fieldsMeta[name].value, false);
         }
