@@ -278,7 +278,7 @@ class Field {
             // step: render -> B mount -> 1. _saveRef(A, null) -> 2. _saveRef(B, ref) -> render
             // 1. _saveRef(A, null)
             const cache = this.fieldsMeta[name];
-            this._setCache(name, key, cache);
+            cache && this._setCache(name, key, cache);
             // after destroy, delete data
             delete this.instance[name];
             this.remove(name);
