@@ -770,6 +770,33 @@ describe('field', () => {
                 assert(field.getValue('key2.3.id') === undefined);
 
             });
+
+            it('should remove field with name using bracket notation', () => {
+                const field = new Field(this, { parseName: true });
+                field.init('key2[0].id', { initValue: 0 });
+                field.init('key2[1].id', { initValue: 1 });
+                field.init('key2[2].id', { initValue: 2 });
+                field.init('key2[3].id', { initValue: 3 });
+
+                field.deleteArrayValue('key2', 1);
+                assert(field.getValue('key2[0].id') === 0);
+                assert(field.getValue('key2[1].id') === 2);
+                assert(field.getValue('key2[2].id') === 3);
+                assert(field.getValue('key2[3].id') === undefined);
+
+                field.deleteArrayValue('key2', 1);
+                assert(field.getValue('key2[0].id') === 0);
+                assert(field.getValue('key2[1].id') === 3);
+                assert(field.getValue('key2[2].id') === undefined);
+                assert(field.getValue('key2[3].id') === undefined);
+
+                field.deleteArrayValue('key2', 0);
+                assert(field.getValue('key2[0].id') === 3);
+                assert(field.getValue('key2[1].id') === undefined);
+                assert(field.getValue('key2[2].id') === undefined);
+                assert(field.getValue('key2[3].id') === undefined);
+            });
+
             it('should remove 2 field item with deleteArrayValue(key,index,2)', () => {
                 const field = new Field(this, { parseName: true });
                 field.init('key.0', { initValue: 0 });
