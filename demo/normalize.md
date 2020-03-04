@@ -3,8 +3,8 @@ title: 自定义返回值 - custom value
 order: 2
 ---
 
-通过 `getValueFormatter` 自定义从组件获取什么 `value` 
-通过 `setValueFormatter` 自定义转换组件需要的 `value` 
+通过 `getValueFormatter` 自定义从组件获取 `value` 
+通过 `setValueFormatter` 自定义转换 `value` 到组件
 
 ---
 
