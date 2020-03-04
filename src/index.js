@@ -93,9 +93,15 @@ class Field {
             rules = [],
             props = {},
             getValueFromEvent = null,
+            getValueFormatter = getValueFromEvent,
+            setValueFormatter,
             autoValidate = true,
         } = fieldOption;
         const { parseName } = this.options;
+
+        if (getValueFromEvent) {
+            warning('`getValueFromEvent` has been deprecated in `Field`, use `getValueFormatter` instead of it');
+        }
 
         const originalProps = Object.assign({}, props, rprops);
         const defaultValueName = `default${valueName[0].toUpperCase()}${valueName.slice(1)}`;
@@ -113,7 +119,8 @@ class Field {
             valueName,
             initValue: defaultValue,
             disabled: 'disabled' in originalProps ? originalProps.disabled : false,
-            getValueFromEvent,
+            getValueFormatter,
+            setValueFormatter,
             rules: Array.isArray(rules) ? rules : [rules],
             ref: originalProps.ref,
         });
@@ -161,7 +168,7 @@ class Field {
             'data-meta': 'Field',
             id: name,
             ref: this._getCacheBind(name, `${name}__ref`, this._saveRef),
-            [valueName]: field.value,
+            [valueName]: setValueFormatter ? setValueFormatter(field.value) : field.value,
         };
 
         let rulesMap = {};
@@ -225,7 +232,7 @@ class Field {
             return;
         }
 
-        field.value = field.getValueFromEvent ? field.getValueFromEvent.apply(this, others) : getValueFromEvent(e);
+        field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
 
         if (this.options.parseName) {
             this.values = setIn(this.values, name, field.value);
