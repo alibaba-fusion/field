@@ -139,9 +139,13 @@ export type InitOption<T = any> = {
     props?: object;
 
     /**
-     * 自定义从onChange事件中获取value的方式，一般不需要设置. 详细用法查看demo 自定义数据获取  参数顺序和组件是完全一致的
+     * 自定义从组件获取 `value` 的方式，参数顺序和组件的 onChange 完全一致的
      */
-    getValueFromEvent?: (eventArgs: object) => T;
+    getValueFormatter?: (eventArgs: object) => T;
+    /**
+     * 自定义转换 `value` 为组件需要的数据
+     */
+    setValueFormatter?: (value: T) => T;
 };
 
 export type ValidateResults = {

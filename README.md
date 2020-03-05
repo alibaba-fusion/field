@@ -240,8 +240,8 @@ init(name, options, props)
 | options.initValue | 组件初始值(组件第一次render的时候才会读取，后面再修改此值无效),类似defaultValue | any | | |
 | options.trigger | 触发数据变化的事件名称 | String | | 'onChange' |
 | options.rules | 校验规则 | Array/Object | | | |
-| options.getValueFormatter | 自定义从组件获取 `value`  ，详细用法查看demo `自定义数据获取` | Function(value,...args) 参数顺序和组件是完全一致的 | | | |
-| options.setValueFormatter | 自定义转换 `value` 到组件 ，详细用法查看demo `自定义数据获取` | Function(value)  | | | |
+| options.getValueFormatter | 自定义从组件获取 `value` 的方式，详细用法查看demo `自定义数据获取` | Function(value,...args) 参数顺序和组件的 onChange 完全一致 | | | |
+| options.setValueFormatter | 自定义转换 `value` 为组件需要的数据 ，详细用法查看demo `自定义数据获取` | Function(value)  | | | |
 | props | 组件自定义的事件可以写在这里  | Object | | | |
 | autoValidate | 是否修改数据的时候自动触发校验单个组件的校验, 设为 false 后只能通过 validate() 来触发校验 | Boolean  |true|
 
