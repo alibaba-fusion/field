@@ -282,13 +282,13 @@ export default class Field  {
     /**
      * 获取单个输入控件的 Error
      */
-    getError(name: string): Error;
+    getError(name: string): null | string[];
 
     /**
      * 获取一组输入控件的 Error
      * @param names 字段名
      */
-    getErrors(names?: string[]): Error;
+    getErrors(names?: string[]): object;
 
     /**
      * 设置单个输入控件的 Error
