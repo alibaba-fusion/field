@@ -305,8 +305,12 @@ class Field {
             if (ref) {
                 if (typeof ref === 'string') {
                     throw new Error(`can not set string ref for ${name}`);
+                } else if (typeof ref === 'function') {
+                    ref(component);
+                } else if (typeof ref === 'object' && 'current' in ref) {
+                    // while ref = React.createRef() ref={ current: null}
+                    ref.current = component;
                 }
-                ref(component);
             }
 
             this.instance[name] = component;
