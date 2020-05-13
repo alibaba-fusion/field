@@ -88,6 +88,37 @@ describe('field', () => {
 
             done();
         });
+
+        it('should support React.createRef in Form', function(done) {
+            class Demo extends React.Component {
+                constructor(props) {
+                    super(props);
+                    this.field = new Field(this);
+                    this.ref = React.createRef();
+                }
+                render() {
+                    return (
+                        <Form field={this.field}>
+                            <FormItem>
+                                <Input name="username" ref={this.ref}/>
+                            </FormItem>
+                            <button
+                                onClick={() => {
+                                    assert( typeof this.ref === 'object' );
+                                    assert(this.ref.current !== null);
+                                    done();
+                                }}
+                            >
+                                click
+                            </button>
+                        </Form>
+                    );
+                }
+            }
+            const wrapper = mount(<Demo />);
+            wrapper.find('button').simulate('click');
+        });
+
         it('should support PureComponent', function(done) {
             class Demo extends React.PureComponent {
                 constructor(props) {
