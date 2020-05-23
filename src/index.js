@@ -70,6 +70,7 @@ class Field {
             'spliceArray',
             'addArrayValue',
             'deleteArrayValue',
+            'getNames',
         ].forEach(m => {
             this[m] = this[m].bind(this);
         });

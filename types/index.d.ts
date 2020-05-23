@@ -136,12 +136,12 @@ export type InitOption<T = any> = {
     /**
      * 组件自定义的事件可以写在这里，其他会透传(小包版本^0.3.0支持，大包^0.7.0支持)
      */
-    props?: object;
+    props?: any;
 
     /**
      * 自定义从组件获取 `value` 的方式，参数顺序和组件的 onChange 完全一致的
      */
-    getValueFormatter?: (eventArgs: object) => T;
+    getValueFormatter?: (eventArgs: any) => T;
     /**
      * 自定义转换 `value` 为组件需要的数据
      */
@@ -149,8 +149,8 @@ export type InitOption<T = any> = {
 };
 
 export type ValidateResults = {
-    errors: object[],
-    values: object
+    errors: any[],
+    values: any
 }
 
 export default class Field  {
@@ -209,7 +209,7 @@ export default class Field  {
      * 校验
      * @param callback
      */
-    validateCallback(callback?: (errors: object[], values: ValidateResults) => void): void;
+    validateCallback(callback?: (errors: any[], values: ValidateResults) => void): void;
 
     /**
      * 校验
@@ -218,7 +218,7 @@ export default class Field  {
      */
     validateCallback(
         names?: string[] | string,
-        callback?: (errors: object[], values: ValidateResults) => void
+        callback?: (errors: any[], values: ValidateResults) => void
     ): void;
 
     /**
@@ -228,7 +228,7 @@ export default class Field  {
      */
     validatePromise(
         names?: string[] | string,
-        callback?: (errors: object[], values: ValidateResults) => Promise<any>
+        callback?: (errors: any[], values: ValidateResults) => Promise<any>
     ): Promise<ValidateResults>;
 
     /**
@@ -267,7 +267,7 @@ export default class Field  {
     /**
      * 设置一组输入控件的值（会触发render，请遵循react时机使用)
      */
-    setValues(obj: object): void;
+    setValues(obj: any): void;
 
     /**
      * 设置一组输入控件的值（会触发render，请遵循react时机使用)
@@ -288,7 +288,7 @@ export default class Field  {
      * 获取一组输入控件的 Error
      * @param names 字段名
      */
-    getErrors(names?: string[]): object;
+    getErrors(names?: string[]): any;
 
     /**
      * 设置单个输入控件的 Error
@@ -300,7 +300,7 @@ export default class Field  {
     /**
      * 设置一组输入控件的 Error
      */
-    setErrors(obj: object): void;
+    setErrors(obj: any): void;
 
     addArrayValue<T>(key: string, index: number, ...args: T[]): void;
     /**
