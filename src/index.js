@@ -88,6 +88,7 @@ class Field {
      */
     init(name, fieldOption = {}, rprops) {
         const {
+            id,
             initValue,
             valueName = 'value',
             trigger = 'onChange',
@@ -167,7 +168,7 @@ class Field {
         // Component props
         const inputProps = {
             'data-meta': 'Field',
-            id: name,
+            id: id || name,
             ref: this._getCacheBind(name, `${name}__ref`, this._saveRef),
             [valueName]: setValueFormatter ? setValueFormatter(field.value) : field.value,
         };
