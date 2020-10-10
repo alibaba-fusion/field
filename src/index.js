@@ -47,6 +47,7 @@ class Field {
                 onChange: () => {},
                 autoUnmount: true,
                 autoValidate: true,
+                crossend: false,
             },
             options
         );
@@ -531,7 +532,13 @@ class Field {
 
         if (!hasRule) {
             const errors = this.formatGetErrors(fieldNames);
-            callback && callback(errors, this.getValues(names ? fieldNames : []));
+            if (callback) {
+                if (!this.options.crossend) {
+                    callback(errors, this.getValues(names ? fieldNames : []));
+                } else {
+                    callback({ errors, values: this.getValues(names ? fieldNames : []) });
+                }
+            }
             return;
         }
 
@@ -578,8 +585,13 @@ class Field {
                 }
             }
 
-            // eslint-disable-next-line callback-return
-            callback && callback(errorsGroup, this.getValues(names ? fieldNames : []));
+            if (callback) {
+                if (!this.options.crossend) {
+                    callback(errorsGroup, this.getValues(names ? fieldNames : []));
+                } else {
+                    callback({ errors: errorsGroup, values: this.getValues(names ? fieldNames : []) });
+                }
+            }
             this._reRender();
 
             if (typeof this.afterValidateRerender === 'function') {
