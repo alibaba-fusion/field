@@ -802,6 +802,23 @@ describe('field', () => {
                 assert(field.getValue('key.1') === undefined);
                 assert(field.getValue('key.2') === undefined);
                 assert(field.getValue('key.3') === undefined);
+
+                /// 删除最后一个元素
+                const field2 = new Field(this, { parseName: true });
+
+                field2.init('key.0', { initValue: 0 });
+                field2.init('key.1', { initValue: 1 });
+                field2.init('key.2', { initValue: 2 });
+                field2.init('key.3', { initValue: 3 });
+
+                field2.deleteArrayValue('key', 3);
+
+                assert(field2.getValue('key.0') === 0);
+                assert(field2.getValue('key.1') === 1);
+                assert(field2.getValue('key.2') === 2);
+                assert(field2.getValue('key.3') === undefined);
+
+                assert(field2.getNames().length === 3);
             });
 
             it('should remove field item with value like [{id:1},{id:2}]', () => {

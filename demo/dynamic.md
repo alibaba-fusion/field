@@ -15,6 +15,9 @@ import React from 'react';
 import { Button, Input, Table } from '@alifd/next';
 import Field from '@alifd/field';
 
+const CustomInput = (props) => {
+    return <Input {...props} />
+}
 
 class Demo extends React.Component {
     constructor(props) {
@@ -26,7 +29,7 @@ class Demo extends React.Component {
             parseName: true,
             values: {
                 name: [0, 1, 2, 3].map(i => {
-                    return { id: i, input: i };
+                    return { id: i, input: i, custom: i };
                 })
             }
         });
@@ -39,14 +42,17 @@ class Demo extends React.Component {
 
     addItem(index){
         ++this.idx;
-        this.field.addArrayValue('name', index, {id: this.idx, input: this.idx});
+        this.field.addArrayValue('name', index, {id: this.idx, input: this.idx, custom: this.idx});
+         console.log(this.field.getNames())
     }
 
     removeItem(index) {
         this.field.deleteArrayValue('name', index);
+        console.log(this.field.getNames())
     }
 
     input = (value, index) => <Input  {...this.field.init(`name.${index}.input`)} />;
+    customInput = (value, index) => <CustomInput  {...this.field.init(`name.${index}.custom`)} />;
     op = (value, index) => {
         return <span>
             <Button type="primary" onClick={this.addItem.bind(this, index + 1)}>add</Button>
@@ -61,6 +67,7 @@ class Demo extends React.Component {
                 <Table dataSource={dataSource}>
                     <Table.Column title="id" dataIndex="id" />
                     <Table.Column title="input" dataIndex="id" cell={this.input} />
+                    <Table.Column title="custom" dataIndex="id" cell={this.customInput} />
                     <Table.Column title="operation" cell={this.op} width={150} />
                 </Table>
                 <pre style={{marginTop: 8}}>{JSON.stringify(dataSource, null, 2)}</pre>
