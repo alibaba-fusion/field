@@ -799,25 +799,33 @@ class Field {
      * @param {String} key
      * @param {Number} startIndex
      * @param {Number} howmany
+     * @param {Array} argv
      * @param {*} value
      */
     _spliceArrayValue(key, index, howmany, ...argv) {
         const argc = argv.length;
-        const offset = howmany - argc;
-        const startIndex = index + howmany;
+        const offset = howmany - argc; // how the reset fieldMeta move
+        const startIndex = index + howmany; // 计算起点
 
         /**
-         * case 1: names=['key.0', 'key.1'], should delete 'key.1'
-         * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
+         * eg: call _spliceArrayValue('key', 1) to delete 'key.1':
+         *   case 1: names=['key.0', 'key.1']; delete 'key.1';
+         *   case 2: names=['key.0', 'key.1', 'key.2']; key.1= key.2; delete key.2;
+         *   case 3: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
+         * eg: call _spliceArrayValue('key', 1, item) to add 'key.1':
+         *   case 1: names=['key.0']; add 'key.1' = item;
+         *   case 2: names=['key.0', 'key.1']; key.2= key.1; delete key.1; add key.1 = item;
          */
-        const listMap = {};
+        const listMap = {}; // eg: {1:[{from: 'key.2.name', to: 'key.1.name'}, {from: 'key.2.email', to: 'key.1.email'}]}
         const keyReg = new RegExp(`^(${key}.)(\\d+)`);
         const replaceArgv = [];
         const names = this.getNames();
+
+        // logic of offset fix begin
         names.forEach(n => {
             const ret = keyReg.exec(n);
             if (ret) {
-                const idx = parseInt(ret[2]);
+                const idx = parseInt(ret[2]); // get index of 'key.0.name'
 
                 if (idx >= startIndex) {
                     let l = listMap[idx];
@@ -832,13 +840,15 @@ class Field {
                     }
                 }
 
-                if (offset <= 0 && idx >= index && idx < index + argc) {
+                // in case of offsetList.length = 0
+                if (offset > 0 && idx >= index && idx < index + howmany) {
                     replaceArgv.push(n);
                 }
             }
         });
 
-        const idxList = Object.keys(listMap)
+        // sort with index eg: [{index:1, list: [{from: 'key.2.name', to: 'key.1.name'}]}, {index:2, list: [...]}]
+        const offsetList = Object.keys(listMap)
             .map(i => {
                 return {
                     index: Number(i),
@@ -847,28 +857,26 @@ class Field {
             })
             .sort((a, b) => (offset > 0 ? a.index - b.index : b.index - a.index));
 
-        // should be continuous array
-        if (idxList.length > 0) {
-            idxList.forEach(l => {
-                const list = l.list;
-                list.forEach(i => {
-                    this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
+        offsetList.forEach(l => {
+            const list = l.list;
+            list.forEach(i => {
+                this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
+            });
+        });
+
+        // delete copy data
+        if (offsetList.length > 0) {
+            const removeList = offsetList.slice(offsetList.length - (offset < 0 ? -offset : offset), offsetList.length);
+            removeList.forEach(item => {
+                item.list.forEach(i => {
+                    delete this.fieldsMeta[i.from];
                 });
             });
-
-            if (offset > 0) {
-                const removeList = idxList.slice(idxList.length - offset, idxList.length);
-                removeList.forEach(item => {
-                    item.list.forEach(i => {
-                        delete this.fieldsMeta[i.from];
-                    });
-                });
-            } else {
-                // will get from this.values while rerender
-                replaceArgv.forEach(i => {
-                    delete this.fieldsMeta[i];
-                });
-            }
+        } else {
+            // will get from this.values while rerender
+            replaceArgv.forEach(i => {
+                delete this.fieldsMeta[i];
+            });
         }
 
         const p = this.getValue(key);
