@@ -840,7 +840,7 @@ class Field {
                     }
                 }
 
-                // in case of offsetList.length = 0
+                // in case of offsetList.length = 0, eg: delete last element
                 if (offset > 0 && idx >= index && idx < index + howmany) {
                     replaceArgv.push(n);
                 }
