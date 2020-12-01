@@ -244,7 +244,7 @@ describe('options', () => {
         });
 
         it('should use setValues instead of constructor values on field that has not been initialized', function() {
-            const inputValue = 'my value';            
+            const inputValue = 'my value';
             const field = new Field(this, {
                 values: {
                     input: inputValue,
@@ -433,7 +433,7 @@ describe('options', () => {
             assert.equal(field.getValue('input.myValue'), 1);
         });
 
-        
+
 
         it('should remove top level field after removed', function() {
             const fieldDefault = 'field default value';
@@ -579,7 +579,7 @@ describe('options', () => {
                 assert.equal(field.getValue('input.myValue'), undefined);
                 assert.equal(field.getValue('input.otherValue'), undefined);
             });
-    
+
             it('should reset all to undefined when given `values` in constructor and call `resetToDefault`', function() {
                 const fieldDefault = 'field default value';
                 const secondValue = 'second';
@@ -741,4 +741,52 @@ describe('options', () => {
             done();
         });
     });
+
+    describe('messages', () => {
+        it('should support custom messages', function(done) {
+            const mySpy = spy();
+            const field = new Field(this, {
+                afterValidateRerender: mySpy,
+                messages: {
+                    string: {
+                        minLength: 'custom error message',
+                    }
+                }
+            });
+            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10 }] });
+
+            wrapper = mount(<Input {...inited} />);
+            field.validateCallback();
+
+            assert(mySpy.calledOnce);
+            assert.equal(mySpy.args[0][0].errorsGroup.input.errors, 'custom error message');
+            assert.equal(mySpy.args[0][0].options, field.options);
+            assert.equal(mySpy.args[0][0].instance, field.instance);
+
+            done();
+        })
+
+        it('should prefer user passed messages', function(done) {
+            const mySpy = spy();
+            const field = new Field(this, {
+                afterValidateRerender: mySpy,
+                messages: {
+                    string: {
+                        minLength: 'custom error message',
+                    }
+                }
+            });
+            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+
+            wrapper = mount(<Input {...inited} />);
+            field.validateCallback();
+
+            assert(mySpy.calledOnce);
+            assert.equal(mySpy.args[0][0].errorsGroup.input.errors, 'my error message');
+            assert.equal(mySpy.args[0][0].options, field.options);
+            assert.equal(mySpy.args[0][0].instance, field.instance);
+
+            done();
+        })
+    })
 });

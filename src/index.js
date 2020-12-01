@@ -330,16 +330,12 @@ class Field {
         const value = field.value;
 
         field.state = 'loading';
-
         let validate = this._getCache(name, trigger);
 
         if (validate && typeof validate.abort === 'function') {
             validate.abort();
         }
-
-        validate = new Validate({
-            [name]: rule,
-        });
+        validate = new Validate({ [name]: rule }, { messages: this.options.messages });
 
         this._setCache(name, trigger, validate);
 
@@ -537,6 +533,7 @@ class Field {
 
         const validate = new Validate(descriptor, {
             first: this.options.first,
+            messages: this.options.messages,
         });
 
         validate.validate(values, errors => {
@@ -647,6 +644,7 @@ class Field {
 
         const validate = new Validate(descriptor, {
             first: this.options.first,
+            messages: this.options.messages,
         });
 
         const results = await validate.validatePromise(values);
