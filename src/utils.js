@@ -94,7 +94,7 @@ export function deleteIn(state, name) {
 export function getErrorStrs(errors, processErrorMessage) {
     if (errors) {
         return errors.map(e => {
-            const message = e.message || e;
+            const message = typeof e.message !== 'undefined' ? e.message : e;
 
             if (typeof processErrorMessage === 'function') {
                 return processErrorMessage(message);
