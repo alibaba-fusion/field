@@ -176,28 +176,37 @@ class Field {
         let rulesMap = {};
 
         if (this.options.autoValidate && autoValidate !== false) {
-            // trigger map
+            // trigger map in rules,
             rulesMap = mapValidateRules(field.rules, trigger);
 
-            // validate hook
+            // step1 : validate hooks
             for (const action in rulesMap) {
+                // skip default trigger, which will trigger in step2
                 if (action === trigger) {
                     continue;
                 }
 
                 const actionRule = rulesMap[action];
                 inputProps[action] = (...args) => {
-                    this._validate(name, actionRule, action);
-                    this._callPropsEvent(action, originalProps, ...args);
+                    this._validate(name, actionRule, action, false);
+                    this._callNativePropsEvent(action, originalProps, ...args);
                     this._reRender();
                 };
             }
         }
 
-        // onChange hack
+        // step2: onChange(trigger default equal onChange) hack
         inputProps[trigger] = (...args) => {
-            this._callOnChange(name, rulesMap[trigger], trigger, ...args);
-            this._callPropsEvent(trigger, originalProps, ...args);
+            this._updateFieldValue(name, ...args);
+
+            // clear validate error
+            this._resetError(name);
+            // validate while onChange
+            const rule = rulesMap[trigger];
+            rule && this._validate(name, rule, trigger, false);
+
+            this._callNativePropsEvent(trigger, originalProps, ...args);
+            // call global onChange
             this.options.onChange(name, field.value);
             this._reRender();
         };
@@ -208,10 +217,10 @@ class Field {
     }
 
     /**
-     * event on props
-     * props.onChange props.onBlur
+     * call native event from props.onXx
+     * eg: props.onChange props.onBlur props.onFocus
      */
-    _callPropsEvent(action, props, ...args) {
+    _callNativePropsEvent(action, props, ...args) {
         action in props && typeof props[action] === 'function' && props[action](...args);
     }
 
@@ -226,7 +235,7 @@ class Field {
     /**
      * update field.value and validate
      */
-    _callOnChange(name, rule, trigger, ...others) {
+    _updateFieldValue(name, ...others) {
         const e = others[0];
         const field = this._get(name);
 
@@ -241,11 +250,6 @@ class Field {
         } else {
             this.values[name] = field.value;
         }
-
-        this._resetError(name);
-
-        // validate while onChange
-        rule && this._validate(name, rule, trigger);
     }
 
     /**
@@ -325,7 +329,7 @@ class Field {
      * @param {Array} rule
      * @param {String} trigger onChange/onBlur/onItemClick/...
      */
-    _validate(name, rule, trigger) {
+    _validate(name, rule, trigger, reRender = true) {
         const field = this._get(name);
         const value = field.value;
 
@@ -352,7 +356,7 @@ class Field {
                     field.state = 'success';
                 }
 
-                this._reRender();
+                reRender && this._reRender();
             }
         );
     }
