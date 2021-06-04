@@ -187,7 +187,8 @@ class Field {
 
                 const actionRule = rulesMap[action];
                 inputProps[action] = (...args) => {
-                    this._validate(name, actionRule, action);
+                    // do not reRender immediately, use the following _reRender
+                    this._validate(name, actionRule, action, false);
                     this._callPropsEvent(action, originalProps, ...args);
                     this._reRender();
                 };
@@ -245,7 +246,8 @@ class Field {
         this._resetError(name);
 
         // validate while onChange
-        rule && this._validate(name, rule, trigger);
+        // NOTE: do not reRender immediately, should manual trigger _reRender after _callOnChange()
+        rule && this._validate(name, rule, trigger, false);
     }
 
     /**
@@ -324,8 +326,9 @@ class Field {
      * @param {String} name name of Component
      * @param {Array} rule
      * @param {String} trigger onChange/onBlur/onItemClick/...
+     * @param {Boolean} reRender 
      */
-    _validate(name, rule, trigger) {
+    _validate(name, rule, trigger, reRender = true) {
         const field = this._get(name);
         const value = field.value;
 
@@ -352,7 +355,7 @@ class Field {
                     field.state = 'success';
                 }
 
-                this._reRender();
+                reRender && this._reRender();
             }
         );
     }
