@@ -563,8 +563,10 @@ class Field {
                 // update error in every Field
                 Object.keys(errorsGroup).forEach(i => {
                     const field = this._get(i);
-                    field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
-                    field.state = 'error';
+                    if (field) {
+                        field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
+                        field.state = 'error';
+                    }
                 });
             }
 
