@@ -331,6 +331,10 @@ class Field {
      */
     _validate(name, rule, trigger, reRender = true) {
         const field = this._get(name);
+        if (!field) {
+            return;
+        }
+
         const value = field.value;
 
         field.state = 'loading';
@@ -559,8 +563,10 @@ class Field {
                 // update error in every Field
                 Object.keys(errorsGroup).forEach(i => {
                     const field = this._get(i);
-                    field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
-                    field.state = 'error';
+                    if (field) {
+                        field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
+                        field.state = 'error';
+                    }
                 });
             }
 
@@ -970,8 +976,10 @@ class Field {
 
     _resetError(name) {
         const field = this._get(name);
-        delete field.errors; //清空错误
-        field.state = '';
+        if (field) {
+            delete field.errors; //清空错误
+            field.state = '';
+        }
     }
 
     //trigger rerender
