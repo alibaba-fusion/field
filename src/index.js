@@ -31,6 +31,7 @@ class Field {
         this.fieldsMeta = {};
         this.cachedBind = {};
         this.instance = {};
+        this.instanceCount = {};
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
         this.values = Object.assign({}, options.values);
@@ -286,12 +287,19 @@ class Field {
         const autoUnmount = this.options.autoUnmount;
 
         if (!component && autoUnmount) {
+            // more than one component, do nothing
+            this.instanceCount[name] && this.instanceCount[name]--;
+            if (this.instanceCount[name] > 0) {
+                return;
+            }
+
             // component with same name (eg: type ? <A name="n"/>:<B name="n"/>)
             // while type changed, B will render before A unmount. so we should cached value for B
             // step: render -> B mount -> 1. _saveRef(A, null) -> 2. _saveRef(B, ref) -> render
             // 1. _saveRef(A, null)
             const cache = this.fieldsMeta[name];
             cache && this._setCache(name, key, cache);
+
             // after destroy, delete data
             delete this.instance[name];
             this.remove(name);
@@ -317,6 +325,16 @@ class Field {
                     // while ref = React.createRef() ref={ current: null}
                     ref.current = component;
                 }
+            }
+
+            // mount
+            if (autoUnmount && component) {
+                let cnt = this.instanceCount[name];
+                if (!cnt) {
+                    cnt = 0;
+                }
+
+                this.instanceCount[name] = cnt + 1;
             }
 
             this.instance[name] = component;
