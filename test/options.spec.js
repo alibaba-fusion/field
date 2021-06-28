@@ -88,6 +88,39 @@ describe('options', () => {
         done();
     });
 
+    it('should support more than 1 Component with same name, delete one , can still getValue', function(done) {
+        class Demo extends React.Component {
+            state = {
+                show: true,
+            };
+            field = new Field(this);
+
+            render() {
+                const init = this.field.init;
+                return (
+                    <div>
+                        {this.state.show ? <Input {...init('input')} /> : null}
+                        <Input {...init('input', {initValue: 'test'})} />
+                        <button
+                            onClick={() => {
+                                assert(
+                                    'input' in this.field.getValues() === true
+                                );
+                                done();
+                            }}
+                        >
+                            click
+                        </button>
+                    </div>
+                );
+            }
+        }
+        wrapper = mount(<Demo />);
+        wrapper.setState({ show: false });
+        wrapper.update();
+        wrapper.find('button').simulate('click');
+    });
+
     it('should support autoUnmount=false', function(done) {
         class Demo extends React.Component {
             state = {
