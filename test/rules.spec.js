@@ -174,7 +174,7 @@ describe('rules', () => {
                 } else {
                   setTimeout(() => {
                     if (value === 'frank') {
-                      reject([new Error('Sorry Error')]);
+                      reject([new Error('Sorry name existed')]);
                     } else {
                       resolve();
                     }
@@ -200,7 +200,7 @@ describe('rules', () => {
         wrapper.find('input').simulate('change', { target: { value: 'frank' } });
 
         setTimeout(() => {
-            assert(wrapper.find('label').text() === 'Sorry Error');
+            assert(wrapper.find('label').text() === 'Sorry name existed');
             done();
         }, 200);
     });
