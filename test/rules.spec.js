@@ -163,4 +163,46 @@ describe('rules', () => {
         assert(field.getError('input')[0] === '不能为空！');
         done();
     });
+
+    it('should reRender while validator callback after 200ms, fix #51', function(done) {
+        class Demo extends React.Component {
+            field = new Field(this);
+            userExists(rule, value) {
+              return new Promise((resolve, reject) => {
+                if (!value) {
+                  resolve();
+                } else {
+                  setTimeout(() => {
+                    if (value === 'frank') {
+                      reject([new Error('Sorry name existed')]);
+                    } else {
+                      resolve();
+                    }
+                  }, 100);
+                }
+              });
+            }
+          
+          
+            render() {
+              const { getState, getError, init } = this.field;
+          
+              return (
+                <div>
+                  <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
+                  <label>{getError('userName')}</label>
+                </div>
+              );
+            }
+        }
+
+        const wrapper = mount(<Demo />);
+        wrapper.find('input').simulate('change', { target: { value: 'frank' } });
+
+        setTimeout(() => {
+            assert(wrapper.find('label').text() === 'Sorry name existed');
+            done();
+        }, 200);
+    });
+
 });
