@@ -209,7 +209,7 @@ export default class Field  {
      * 校验
      * @param callback
      */
-    validateCallback(callback?: (errors: any[], values: ValidateResults) => void): void;
+    validateCallback(callback?: (errors: any[], values: object) => void): void;
 
     /**
      * 校验
@@ -218,7 +218,7 @@ export default class Field  {
      */
     validateCallback(
         names?: string[] | string,
-        callback?: (errors: any[], values: ValidateResults) => void
+        callback?: (errors: any[], values: object) => void
     ): void;
 
     /**
@@ -228,7 +228,7 @@ export default class Field  {
      */
     validatePromise(
         names?: string[] | string,
-        callback?: (errors: any[], values: ValidateResults) => Promise<any>
+        callback?: (errors: any[], values: object) => Promise<any>
     ): Promise<ValidateResults>;
 
     /**
