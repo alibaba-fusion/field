@@ -189,26 +189,27 @@ class Field {
 
                 const actionRule = rulesMap[action];
                 inputProps[action] = (...args) => {
-                    this._validate(name, actionRule, action, false);
                     this._callNativePropsEvent(action, originalProps, ...args);
-                    this._reRender();
+                    this._validate(name, actionRule, action);
                 };
             }
         }
 
-        // step2: onChange(trigger default equal onChange) hack
+        // step2: onChange(trigger=onChange by default) hack
         inputProps[trigger] = (...args) => {
             this._updateFieldValue(name, ...args);
 
             // clear validate error
             this._resetError(name);
-            // validate while onChange
-            const rule = rulesMap[trigger];
-            rule && this._validate(name, rule, trigger, false);
 
             this._callNativePropsEvent(trigger, originalProps, ...args);
             // call global onChange
             this.options.onChange(name, field.value);
+
+            // validate while onChange
+            const rule = rulesMap[trigger];
+            rule && this._validate(name, rule, trigger);
+
             this._reRender();
         };
 
@@ -347,7 +348,7 @@ class Field {
      * @param {Array} rule
      * @param {String} trigger onChange/onBlur/onItemClick/...
      */
-    _validate(name, rule, trigger, reRender = true) {
+    _validate(name, rule, trigger) {
         const field = this._get(name);
         if (!field) {
             return;
@@ -370,13 +371,28 @@ class Field {
                 [name]: value,
             },
             errors => {
+                let newErrors, newState;
                 if (errors && errors.length) {
-                    field.errors = getErrorStrs(errors, this.processErrorMessage);
-                    field.state = 'error';
+                    newErrors = getErrorStrs(errors, this.processErrorMessage);
+                    newState = 'error';
                 } else {
-                    field.errors = [];
-                    field.state = 'success';
+                    newErrors = [];
+                    newState = 'success';
                 }
+
+                let reRender = false;
+                // only status or errors changed, Rerender
+                if (
+                    newState !== field.state ||
+                    !field.errors ||
+                    newErrors.length !== field.errors.length ||
+                    newErrors.find((e, idx) => e !== field.errors[idx])
+                ) {
+                    reRender = true;
+                }
+
+                field.errors = newErrors;
+                field.state = newState;
 
                 reRender && this._reRender();
             }
