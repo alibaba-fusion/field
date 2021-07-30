@@ -209,6 +209,7 @@ let myfield = new Field(this [,options]);
 | autoUnmount        | 自动删除 Unmout 元素，如果想保留数据可以设置为 false                                                                                    | Boolean              | true   |
 | autoValidate       | 是否修改数据的时候就自动触发校验, 设为 false 后只能通过 validate() 来触发校验                                                           | Boolean              | true   |
 | values             | 初始化数据                                                                                                                              | Object               |        |
+| onValuesChange     | 当 values 发生改变时回调(setValue/setValues 也会触发此回调)                                                                            | Function(values)     |        |
 
 #### API 接口
 

@@ -5,6 +5,11 @@ export type FieldOption = {
     onChange?: (name: string, value: any) => void;
 
     /**
+     * values 改变时会触发（setValue会触发该函数）
+     */
+    onValuesChange?: (values: any) => void;
+
+    /**
      * 是否翻译init(name)中的name(getValues会把带.的字符串转换成对象)
      * @default false
      */

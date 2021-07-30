@@ -46,6 +46,7 @@ class Field {
                 scrollToFirstError: true,
                 first: false,
                 onChange: () => {},
+                onValuesChange: () => {},
                 autoUnmount: true,
                 autoValidate: true,
             },
@@ -238,6 +239,7 @@ class Field {
      * update field.value and validate
      */
     _updateFieldValue(name, ...others) {
+        const { parseName, onValuesChange } = this.options;
         const e = others[0];
         const field = this._get(name);
 
@@ -247,11 +249,13 @@ class Field {
 
         field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
 
-        if (this.options.parseName) {
+        if (parseName) {
             this.values = setIn(this.values, name, field.value);
         } else {
             this.values[name] = field.value;
         }
+
+        onValuesChange(this.values);
     }
 
     /**
@@ -426,6 +430,7 @@ class Field {
     }
 
     setValue(name, value, reRender = true) {
+        const { onValuesChange } = this.options;
         if (name in this.fieldsMeta) {
             this.fieldsMeta[name].value = value;
         }
@@ -434,11 +439,16 @@ class Field {
         } else {
             this.values[name] = value;
         }
-        reRender && this._reRender();
+
+        if (reRender) {
+            onValuesChange(this.values);
+            this._reRender();
+        }
     }
 
     setValues(fieldsValue = {}, reRender = true) {
-        if (!this.options.parseName) {
+        const { parseName, onValuesChange } = this.options;
+        if (!parseName) {
             Object.keys(fieldsValue).forEach(name => {
                 this.setValue(name, fieldsValue[name], false);
             });
@@ -459,7 +469,11 @@ class Field {
                 }
             });
         }
-        reRender && this._reRender();
+
+        if (reRender) {
+            onValuesChange(this.values);
+            this._reRender();
+        }
     }
 
     setError(name, errors) {
@@ -757,6 +771,7 @@ class Field {
     }
 
     _reset(ns, backToDefault) {
+        const { parseName, onValuesChange } = this.options;
         if (typeof ns === 'string') {
             ns = [ns];
         }
@@ -779,7 +794,7 @@ class Field {
                 delete field.rules;
                 delete field.rulesMap;
 
-                if (this.options.parseName) {
+                if (parseName) {
                     this.values = setIn(this.values, name, field.value);
                 } else {
                     this.values[name] = field.value;
@@ -788,6 +803,7 @@ class Field {
         });
 
         if (changed) {
+            onValuesChange(this.values);
             this._reRender();
         }
     }
@@ -926,6 +942,7 @@ class Field {
             p.splice(index, howmany, ...argv);
         }
 
+        this.options.onValuesChange(this.values);
         this._reRender();
     }
 
