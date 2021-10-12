@@ -42,13 +42,15 @@ export type FieldOption = {
 
 export type InitResult<T> = {
     id: string;
-    value: T;
+    value?: T;
+    checked?: T;
     onChange(value: T): void;
 };
 
 export type InitResult2<T, T2> = {
     id: string;
-    value: T;
+    value?: T;
+    checked?: T;
     onChange(value: T, extra: T2): void;
 };
 
