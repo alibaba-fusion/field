@@ -67,7 +67,7 @@
     "ice-scripts": "^2.0.0",
     "lint-staged": "^9.2.0",
     "mocha": "^6.1.4",
-    "moment": "^2.24.0",
+    "moment": "2.29.1",
     "power-assert": "^1.6.1",
     "prettier": "^1.18.2",
     "react": "^16.3.0",
