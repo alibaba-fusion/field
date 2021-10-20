@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@alifd/eslint-config-next": "^2.0.0",
-    "@alifd/next": "^1.15.12",
+    "@alifd/next": "1.24.10",
     "@commitlint/cli": "^8.1.0",
     "babel-eslint": "^10.0.2",
     "babel-plugin-transform-jsx-list": "^0.1.0",
