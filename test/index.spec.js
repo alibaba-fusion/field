@@ -1065,6 +1065,19 @@ describe('field', () => {
 
             mount(<Demo />);
         });
+        it('should get inputValues', function() {
+            const field = new Field(this);
+            const inited = field.init('input');
+
+            const wrapper = mount(<Input {...inited} />);
+            wrapper.find('input').simulate('change', {
+                target: {
+                    value: '1',
+                },
+            });
+
+            assert(field.get('input').inputValues.length === 2);
+        });
     })
 
     describe('validate', function() {
