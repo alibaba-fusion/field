@@ -5,6 +5,7 @@ const initMeta = {
     state: '',
     valueName: 'value',
     trigger: 'onChange',
+    inputValues: [],
 };
 
 class Field {
@@ -171,7 +172,7 @@ class Field {
             'data-meta': 'Field',
             id: id || name,
             ref: this._getCacheBind(name, `${name}__ref`, this._saveRef),
-            [valueName]: setValueFormatter ? setValueFormatter(field.value) : field.value,
+            [valueName]: setValueFormatter ? setValueFormatter(field.value, field.inputValues) : field.value,
         };
 
         let rulesMap = {};
@@ -246,6 +247,7 @@ class Field {
         }
 
         field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
+        field.inputValues = others;
 
         if (this.options.parseName) {
             this.values = setIn(this.values, name, field.value);
@@ -1029,6 +1031,14 @@ class Field {
 
     _get(name) {
         return name in this.fieldsMeta ? this.fieldsMeta[name] : null;
+    }
+
+    get(name) {
+        if (name) {
+            return this._get(name);
+        } else {
+            return this.fieldsMeta;
+        }
     }
 }
 

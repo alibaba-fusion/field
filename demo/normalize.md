@@ -29,13 +29,13 @@ class App extends React.Component {
 
         return (<div>
             <Switch {...init('switch', { 
-                getValueFormatter: (value) => {return value === true? 1:0},
-                setValueFormatter: (value) => {return value===1? true: false}
+                getValueFormatter: (value, ...args) => { return value === true? 1:0},
+                setValueFormatter: (value, inputValues) => {debugger;console.log(inputValues); return value===1? true: false}
                 })}/>
             <br/><br/>
             <DatePicker {...init('time', { 
-                getValueFormatter: (value) => value.format('YYYY-MM-DD'),
-                setValueFormatter: (value) => moment(value, 'YYYY-MM-DD')
+                getValueFormatter: (value, ...args) => { return value.format('YYYY-MM-DD')},
+                setValueFormatter: (value, inputValues) => {return moment(value, 'YYYY-MM-DD')}
                 })} />
             <br/><br/>
             <Button type="primary" onClick={() => {
