@@ -50,7 +50,6 @@ export type InitResult<T> = {
 export type InitResult2<T, T2> = {
     id: string;
     value?: T;
-    checked?: T;
     onChange(value: T, extra: T2): void;
 };
 
