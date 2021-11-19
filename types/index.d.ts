@@ -43,7 +43,6 @@ export type FieldOption = {
 export type InitResult<T> = {
     id: string;
     value?: T;
-    checked?: T;
     onChange(value: T): void;
 };
 
