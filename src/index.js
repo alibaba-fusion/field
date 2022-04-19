@@ -213,7 +213,7 @@ class Field {
             const rule = rulesMap[trigger];
             rule && this._validate(name, rule, trigger);
 
-            this._reRender(name);
+            this._reRender(name, trigger);
         };
 
         // step3: save reRender function
@@ -404,7 +404,7 @@ class Field {
                 field.errors = newErrors;
                 field.state = newState;
 
-                reRender && this._reRender(name);
+                reRender && this._reRender(name, 'validate');
             }
         );
     }
@@ -444,7 +444,7 @@ class Field {
         } else {
             this.values[name] = value;
         }
-        reRender && this._reRender(name);
+        reRender && this._reRender(name, 'setValue');
     }
 
     setValues(fieldsValue = {}, reRender = true) {
@@ -488,7 +488,7 @@ class Field {
             this.fieldsMeta[name].state = '';
         }
 
-        this._reRender(name);
+        this._reRender(name, 'setError');
     }
 
     setErrors(fieldsErrors = {}) {
@@ -1027,10 +1027,10 @@ class Field {
     }
 
     //trigger rerender
-    _reRender(name) {
+    _reRender(name, action) {
         if (name && this.reRenders[name]) {
             const reRender = this.reRenders[name];
-            reRender();
+            reRender(action);
             return;
         }
 
