@@ -33,6 +33,7 @@ class Field {
         this.cachedBind = {};
         this.instance = {};
         this.instanceCount = {};
+        this.reRenders = {};
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
         this.values = Object.assign({}, options.values);
@@ -100,6 +101,7 @@ class Field {
             getValueFormatter = getValueFromEvent,
             setValueFormatter,
             autoValidate = true,
+            reRender,
         } = fieldOption;
         const { parseName } = this.options;
 
@@ -211,8 +213,13 @@ class Field {
             const rule = rulesMap[trigger];
             rule && this._validate(name, rule, trigger);
 
-            this._reRender();
+            this._reRender(name);
         };
+
+        // step3: save reRender function
+        if (reRender && typeof reRender === 'function') {
+            this.reRenders[name] = reRender;
+        }
 
         delete originalProps[defaultValueName];
 
@@ -305,6 +312,7 @@ class Field {
 
             // after destroy, delete data
             delete this.instance[name];
+            delete this.reRenders[name];
             this.remove(name);
             return;
         }
@@ -396,7 +404,7 @@ class Field {
                 field.errors = newErrors;
                 field.state = newState;
 
-                reRender && this._reRender();
+                reRender && this._reRender(name);
             }
         );
     }
@@ -436,7 +444,7 @@ class Field {
         } else {
             this.values[name] = value;
         }
-        reRender && this._reRender();
+        reRender && this._reRender(name);
     }
 
     setValues(fieldsValue = {}, reRender = true) {
@@ -480,7 +488,7 @@ class Field {
             this.fieldsMeta[name].state = '';
         }
 
-        this._reRender();
+        this._reRender(name);
     }
 
     setErrors(fieldsErrors = {}) {
@@ -1019,7 +1027,13 @@ class Field {
     }
 
     //trigger rerender
-    _reRender() {
+    _reRender(name) {
+        if (name && this.reRenders[name]) {
+            const reRender = this.reRenders[name];
+            reRender();
+            return;
+        }
+
         if (this.com) {
             if (!this.options.forceUpdate && this.com.setState) {
                 this.com.setState({});
