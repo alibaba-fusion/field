@@ -631,7 +631,7 @@ class Field {
 
             // eslint-disable-next-line callback-return
             callback && callback(errorsGroup, this.getValues(names ? fieldNames : []));
-            this._reRender();
+            this._reRender(names, 'validate');
 
             if (typeof this.afterValidateRerender === 'function') {
                 this.afterValidateRerender({
@@ -717,7 +717,7 @@ class Field {
         } catch (error) {
             return error;
         }
-        this._reRender();
+        this._reRender(names, 'validate');
 
         return callbackResults;
     }
@@ -798,7 +798,7 @@ class Field {
         });
 
         if (changed) {
-            this._reRender();
+            this._reRender(names, 'reset');
         }
     }
 
@@ -1028,11 +1028,18 @@ class Field {
 
     //trigger rerender
     _reRender(name, action) {
-        if (name && this.reRenders[name]) {
-            const reRender = this.reRenders[name];
-            reRender(action);
-            return;
+        // 指定了字段列表且字段存在对应的自定义渲染函数
+        if (name) {
+            const names = Array.isArray(name) ? name : [name];
+            if (names.length && names.every(n => this.reRenders[n])) {
+                names.forEach(n => {
+                    const reRender = this.reRenders[n];
+                    reRender(action);
+                });
+                return;
+            }
         }
+
 
         if (this.com) {
             if (!this.options.forceUpdate && this.com.setState) {
