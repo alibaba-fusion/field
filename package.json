@@ -74,7 +74,7 @@
     "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
     "redux": "^4.0.4",
-    "semantic-release": "^17.2.3",
+    "semantic-release": "^19.0.3",
     "sinon": "^7.3.2",
     "typescript": "^3.5.3"
   },
