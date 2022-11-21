@@ -974,6 +974,24 @@ describe('field', () => {
                 assert(field.getValue('key2.1.id') === 1);
                 assert(field.getValue('key2.2.id') === 2);
             });
+
+            it('should compatible with special characters key', () => {
+                const field = new Field(this, { parseName: true });
+
+                field.init('$key.0', { initValue: 0 });
+                field.init('$key.1', { initValue: 1 });
+                field.init('$key.2', { initValue: 2 });
+                field.init('$key.3', { initValue: 3 });
+
+                field.deleteArrayValue('$key', 3);
+
+                assert(field.getValue('$key.0') === 0);
+                assert(field.getValue('$key.1') === 1);
+                assert(field.getValue('$key.2') === 2);
+                assert(field.getValue('$key.3') === undefined);
+
+                assert(field.getNames().length === 3);
+            });
         });
     });
 

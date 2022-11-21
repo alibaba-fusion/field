@@ -869,7 +869,10 @@ class Field {
          *   case 2: names=['key.0', 'key.1']; key.2= key.1; delete key.1; add key.1 = item;
          */
         const listMap = {}; // eg: {1:[{from: 'key.2.name', to: 'key.1.name'}, {from: 'key.2.email', to: 'key.1.email'}]}
-        const keyReg = new RegExp(`^(${key}.)(\\d+)`);
+        const replacedReg = /\$/g;
+        // 替换特殊字符$
+        const replacedKey = key.replace(replacedReg, '\\$&');
+        const keyReg = new RegExp(`^(${replacedKey}.)(\\d+)`);
         const replaceArgv = [];
         const names = this.getNames();
 
@@ -1039,7 +1042,6 @@ class Field {
                 return;
             }
         }
-
 
         if (this.com) {
             if (!this.options.forceUpdate && this.com.setState) {
