@@ -126,9 +126,10 @@ export function getParams(ns, cb) {
  */
 export function getValueFromEvent(e) {
     // support custom element
-    if (!e || !e.target) {
+    if (!e || !e.target || !e.preventDefault) {
         return e;
     }
+
     const { target } = e;
 
     if (target.type === 'checkbox') {
