@@ -205,4 +205,22 @@ describe('rules', () => {
         }, 200);
     });
 
+    it('should rulesProps validateCallbackAction change ', function(done) {
+        const field = new Field(this);
+        const initRules= {
+            required: true,
+            message: 'cant be null',
+        };
+        const inited = field.init('input', {
+            rules: initRules,
+        });
+
+        mount(<Input {...inited} />);
+
+        const callback = sinon.spy();
+        field.validateCallback(callback);
+        assert(initRules.validator === undefined);
+        done();
+    });
+
 });

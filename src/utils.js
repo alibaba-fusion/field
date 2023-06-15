@@ -203,3 +203,14 @@ if (
 }
 
 export const warning = warn;
+
+export function deepCloneRules(value) {
+    if (typeof value !== 'object' || value === null) return value;
+    if (Array.isArray(value)) {
+        return value.map(item => {
+            if (typeof item === 'object') return { ...item };
+            return item;
+        });
+    }
+    return { ...value };
+}
