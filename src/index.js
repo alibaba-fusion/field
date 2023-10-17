@@ -8,7 +8,7 @@ import {
     deleteIn,
     mapValidateRules,
     warning,
-    deepCloneRules,
+    cloneToRuleArr,
 } from './utils';
 
 const initMeta = {
@@ -137,7 +137,7 @@ class Field {
             disabled: 'disabled' in originalProps ? originalProps.disabled : false,
             getValueFormatter,
             setValueFormatter,
-            rules: Array.isArray(rules) ? deepCloneRules(rules) : [deepCloneRules(rules)],
+            rules: cloneToRuleArr(rules),
             ref: originalProps.ref,
         });
 

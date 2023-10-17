@@ -204,13 +204,11 @@ if (
 
 export const warning = warn;
 
-export function deepCloneRules(value) {
-    if (typeof value !== 'object' || value === null) return value;
-    if (Array.isArray(value)) {
-        return value.map(item => {
-            if (typeof item === 'object') return { ...item };
-            return item;
-        });
+export function cloneToRuleArr(rules) {
+    if (!rules) {
+        return [];
     }
-    return { ...value };
+    const rulesArr = Array.isArray(rules) ? rules : [rules];
+    // 后续会修改rule对象，这里做浅复制以避免对传入对象的修改
+    return rulesArr.map(rule => ({ ...rule }));
 }
