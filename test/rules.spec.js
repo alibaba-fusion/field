@@ -100,7 +100,7 @@ describe('rules', () => {
             .then(() => {
                 done();
             })
-            
+
     });
 
     it('triger', function(done) {
@@ -182,11 +182,11 @@ describe('rules', () => {
                 }
               });
             }
-          
-          
+
+
             render() {
               const { getState, getError, init } = this.field;
-          
+
               return (
                 <div>
                   <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
@@ -205,7 +205,7 @@ describe('rules', () => {
         }, 200);
     });
 
-    it('should rulesProps validateCallbackAction change ', function(done) {
+    it('should rulesProps immutable', function(done) {
         const field = new Field(this);
         const initRules= {
             required: true,
