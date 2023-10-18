@@ -85,7 +85,7 @@
       "表单"
     ]
   },
-  "homepage": "https://unpkg.com/@alifd/field@1.6.3-beta.0/build/index.html",
+  "homepage": "https://unpkg.com/@alifd/field@1.6.3/build/index.html",
   "bugs": "https://github.com/alibaba-fusion/field/issues",
   "publishConfig": {
     "access": "public"
