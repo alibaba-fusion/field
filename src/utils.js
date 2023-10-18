@@ -203,3 +203,12 @@ if (
 }
 
 export const warning = warn;
+
+export function cloneToRuleArr(rules) {
+    if (!rules) {
+        return [];
+    }
+    const rulesArr = Array.isArray(rules) ? rules : [rules];
+    // 后续会修改rule对象，这里做浅复制以避免对传入对象的修改
+    return rulesArr.map(rule => ({ ...rule }));
+}

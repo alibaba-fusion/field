@@ -100,7 +100,7 @@ describe('rules', () => {
             .then(() => {
                 done();
             })
-            
+
     });
 
     it('triger', function(done) {
@@ -182,11 +182,11 @@ describe('rules', () => {
                 }
               });
             }
-          
-          
+
+
             render() {
               const { getState, getError, init } = this.field;
-          
+
               return (
                 <div>
                   <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
@@ -203,6 +203,24 @@ describe('rules', () => {
             assert(wrapper.find('label').text() === 'Sorry name existed');
             done();
         }, 200);
+    });
+
+    it('should rulesProps immutable', function(done) {
+        const field = new Field(this);
+        const initRules= {
+            required: true,
+            message: 'cant be null',
+        };
+        const inited = field.init('input', {
+            rules: initRules,
+        });
+
+        mount(<Input {...inited} />);
+
+        const callback = sinon.spy();
+        field.validateCallback(callback);
+        assert(initRules.validator === undefined);
+        done();
     });
 
 });

@@ -1,5 +1,15 @@
 import Validate from '@alifd/validate';
-import { getValueFromEvent, getErrorStrs, getParams, setIn, getIn, deleteIn, mapValidateRules, warning } from './utils';
+import {
+    getValueFromEvent,
+    getErrorStrs,
+    getParams,
+    setIn,
+    getIn,
+    deleteIn,
+    mapValidateRules,
+    warning,
+    cloneToRuleArr,
+} from './utils';
 
 const initMeta = {
     state: '',
@@ -127,7 +137,7 @@ class Field {
             disabled: 'disabled' in originalProps ? originalProps.disabled : false,
             getValueFormatter,
             setValueFormatter,
-            rules: Array.isArray(rules) ? rules : [rules],
+            rules: cloneToRuleArr(rules),
             ref: originalProps.ref,
         });
 
