@@ -1,6 +1,6 @@
 import React, { isValidElement, cloneElement } from 'react';
 import assert from 'power-assert';
-import { getErrorStrs, getIn, setIn, deleteIn, cloneToRuleArr } from '../src/utils';
+import { getErrorStrs, hasIn, getIn, setIn, deleteIn, cloneToRuleArr, splitNameToPath } from "../src/utils";
 
 /* eslint-disable react/jsx-filename-extension */
 
@@ -49,6 +49,46 @@ describe('Field Utils', () => {
             assert.deepEqual(result[1].props.children, 'message 2');
         });
     });
+
+    describe('splitNameToPath', () => {
+        it('basic usage', () => {
+            assert.deepEqual(splitNameToPath('a'), ['a']);
+            assert.deepEqual(splitNameToPath('a.b'), ['a', 'b']);
+        });
+        it('with array', () => {
+            assert.deepEqual(splitNameToPath('a[0]'), ['a', '0']);
+            assert.deepEqual(splitNameToPath('a[0].b'), ['a', '0', 'b']);
+            assert.deepEqual(splitNameToPath('a.b[0]'), ['a', 'b', '0']);
+        });
+        it('should return blank string when is not valid string', () => {
+            assert(splitNameToPath(undefined) === '');
+            assert(splitNameToPath(null) === '');
+            assert(splitNameToPath('') === '');
+            assert(splitNameToPath({}) === '');
+            assert(splitNameToPath([]) === '');
+        });
+    });
+
+    describe('hasIn', () => {
+        it('should return false when state is nil', () => {
+            assert(!hasIn(undefined, 'a.b'));
+            assert(!hasIn(null, 'a.b'));
+        });
+        it('should return false when name is blank or nil', () => {
+            assert(!hasIn({a: 1}, ''));
+            assert(!hasIn({a: 1}, undefined));
+            assert(!hasIn({a: 1}, null));
+        });
+        it('should return true when has property', () => {
+            assert(hasIn({a: {b: 1}}, 'a.b'));
+        });
+        it('should return false when has no property', () => {
+            assert(!hasIn({a: {b: 1}}, 'a.b.c'));
+            assert(!hasIn({a: {b: 1}}, 'a.c'));
+            assert(!hasIn({a: {b: 1}}, 'a[0]'));
+        });
+    });
+
     describe('getIn', () => {
         it('should return state when state is falsy', () => {
             assert(getIn(undefined, 'a') === undefined);
@@ -80,6 +120,15 @@ describe('Field Utils', () => {
 
         it('should get element that is deep array combination', () => {
             assert(getIn({ a: [1, { b: { c: 2 } }] }, 'a[1].b.c') === 2);
+        });
+
+        it('should return undefined when name is not exists', () => {
+            // a is not a object
+            assert(getIn({a: 1}, 'a.a') === undefined);
+            // has not property
+            assert(getIn({a: {}}, 'b.c') === undefined);
+            // is array without the index
+            assert(getIn({a: []}, 'a[0]') === undefined);
         });
     });
 
