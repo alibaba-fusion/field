@@ -1,22 +1,58 @@
+export function splitNameToPath(name) {
+    return typeof name === 'string' && name
+        ? name
+              .replace(/\[/, '.')
+              .replace(/\]/, '')
+              .split('.')
+        : '';
+}
+
+export function hasIn(state, name) {
+    if (!state) {
+        return state;
+    }
+
+    const path = splitNameToPath(name);
+    const length = path.length;
+    if (!length) {
+        return false;
+    }
+
+    let result = state;
+    for (let i = 0; i < length; ++i) {
+        // parent is not object
+        if (typeof result !== 'object' || result === null) {
+            return false;
+        }
+        // has no property
+        const thisName = path[i];
+        if (!(thisName in result)) {
+            return false;
+        }
+        // pass on
+        result = result[thisName];
+    }
+
+    return true;
+}
+
 export function getIn(state, name) {
     if (!state) {
         return state;
     }
 
-    const path =
-        typeof name === 'string'
-            ? name
-                  .replace(/\[/, '.')
-                  .replace(/\]/, '')
-                  .split('.')
-            : '';
+    const path = splitNameToPath(name);
     const length = path.length;
     if (!length) {
         return undefined;
     }
 
     let result = state;
-    for (let i = 0; i < length && !!result; ++i) {
+    for (let i = 0; i < length; ++i) {
+        // parent is not object
+        if (typeof result !== 'object' || result === null) {
+            return undefined;
+        }
         result = result[path[i]];
     }
 

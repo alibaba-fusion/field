@@ -3,6 +3,7 @@ import {
     getValueFromEvent,
     getErrorStrs,
     getParams,
+    hasIn,
     setIn,
     getIn,
     deleteIn,
@@ -143,14 +144,18 @@ class Field {
 
         // Controlled Component, should always equal props.value
         if (valueName in originalProps) {
-            field.value = originalProps[valueName];
+            const originalValue = originalProps[valueName];
 
             // When rerendering set the values from props.value
             if (parseName) {
-                this.values = setIn(this.values, name, field.value);
+                // when parseName is true, field should not store value locally. To prevent sync issues
+                if (!('value' in field)) {
+                    this._proxyFieldValue(field, name);
+                }
             } else {
-                this.values[name] = field.value;
+                this.values[name] = originalValue;
             }
+            field.value = originalValue;
         }
 
         /**
@@ -160,13 +165,10 @@ class Field {
         if (!('value' in field)) {
             if (parseName) {
                 const cachedValue = getIn(this.values, name);
-                if (typeof cachedValue !== 'undefined') {
-                    field.value = cachedValue;
-                } else {
-                    // save struct to this.values even defaultValue is undefiend
-                    field.value = defaultValue;
-                    this.values = setIn(this.values, name, field.value);
-                }
+                const initValue = typeof cachedValue !== 'undefined' ? cachedValue : defaultValue;
+                // when parseName is true, field should not store value locally. To prevent sync issues
+                this._proxyFieldValue(field, name);
+                field.value = initValue;
             } else {
                 const cachedValue = this.values[name];
                 if (typeof cachedValue !== 'undefined') {
@@ -250,6 +252,20 @@ class Field {
         }
 
         return this.fieldsMeta[name];
+    }
+
+    _proxyFieldValue(field, name) {
+        Object.defineProperty(field, 'value', {
+            configurable: true,
+            enumerable: true,
+            get: () => {
+                return getIn(this.values, name);
+            },
+            set: v => {
+                this.values = setIn(this.values, name, v);
+                return true;
+            },
+        });
     }
 
     /**
@@ -465,19 +481,20 @@ class Field {
         } else {
             // NOTE: this is a shallow merge
             // Ex. we have two values a.b.c=1 ; a.b.d=2, and use setValues({a:{b:{c:3}}}) , then because of shallow merge a.b.d will be lost, we will get only {a:{b:{c:3}}}
-            this.values = Object.assign({}, this.values, fieldsValue);
+            // fieldsMeta[name].value is proxy from this.values[name] when parseName is true, so there is no need to assign value to fieldMeta
+            // shallow merge
+            let newValues = Object.assign({}, this.values, fieldsValue);
             const fields = this.getNames();
-            fields.forEach(name => {
-                const value = getIn(this.values, name);
-                if (value !== undefined) {
-                    // copy over values that are in this.values
-                    this.fieldsMeta[name].value = value;
-                } else {
-                    // because of shallow merge
-                    // if no value then copy values from fieldsMeta to keep initialized component data
-                    this.values = setIn(this.values, name, this.fieldsMeta[name].value);
+            // record all old field values
+            const oldFieldValues = fields.map(name => ({ name, value: this.fieldsMeta[name].value }));
+            // assign lost field value to newValues
+            oldFieldValues.forEach(({ name, value }) => {
+                if (!hasIn(newValues, name)) {
+                    newValues = setIn(newValues, name, value);
                 }
             });
+            // store the new values
+            this.values = newValues;
         }
         reRender && this._reRender();
     }
