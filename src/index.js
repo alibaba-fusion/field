@@ -152,11 +152,10 @@ class Field {
                 if (!('value' in field)) {
                     this._proxyFieldValue(field, name);
                 }
-                field.value = originalValue;
             } else {
-                field.value = originalValue;
                 this.values[name] = originalValue;
             }
+            field.value = originalValue;
         }
 
         /**
