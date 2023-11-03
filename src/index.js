@@ -248,14 +248,10 @@ class Field {
 
     _getInitMeta(name) {
         if (!(name in this.fieldsMeta)) {
-            this.fieldsMeta[name] = Object.assign({}, initMeta);
+            this.fieldsMeta[name] = Object.assign({ name }, initMeta);
         }
 
         return this.fieldsMeta[name];
-    }
-
-    _getFieldName(field) {
-        return Object.keys(this.fieldsMeta).find(key => this.fieldsMeta[key] === field);
     }
 
     _proxyFieldValue(field) {
@@ -264,14 +260,11 @@ class Field {
             configurable: true,
             enumerable: true,
             get() {
-                // 此处this指向该getter函数所属的对象，即field
-                // 这样设计是为了尽量减少闭包访问（此处只依赖了一个 _this）以避免闭包变量发生变更的问题
-                // 若该value属性的 descriptor 被拷贝了，这种方式能保证符合预期
-                return getIn(_this.values, _this._getFieldName(this));
+                return getIn(_this.values, this.name);
             },
             set(v) {
                 // 此处this解释同上
-                _this.values = setIn(_this.values, _this._getFieldName(this), v);
+                _this.values = setIn(_this.values, this.name, v);
                 return true;
             },
         });
@@ -952,6 +945,8 @@ class Field {
             const list = l.list;
             list.forEach(i => {
                 this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
+                // 移位后，同步调整name
+                this.fieldsMeta[i.to].name = i.to;
             });
         });
 
