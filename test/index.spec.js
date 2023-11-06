@@ -790,6 +790,15 @@ describe('field', () => {
             });
         });
         describe('addArrayValue && deleteArrayValue', function() {
+            function getFieldValue(field, name) {
+                const value = field.getValue(name);
+                const nameField = field.get(name);
+                if (nameField && nameField.value !== value) {
+                    throw new Error('getValue not equals field.value')
+                }
+                return value;
+            }
+
             it('should remove field item with value like [1,2]', () => {
                 const field = new Field(this, { parseName: true });
                 field.init('key.0', { initValue: 0 });
@@ -799,23 +808,23 @@ describe('field', () => {
 
                 field.deleteArrayValue('key', 1);
 
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 2);
-                assert(field.getValue('key.2') === 3);
-                assert(field.getValue('key.3') === undefined);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 2);
+                assert(getFieldValue(field, 'key.2') === 3);
+                assert(getFieldValue(field, 'key.3') === undefined);
 
                 field.deleteArrayValue('key', 1);
 
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 3);
-                assert(field.getValue('key.2') === undefined);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 3);
+                assert(getFieldValue(field, 'key.2') === undefined);
 
                 field.deleteArrayValue('key', 0);
 
-                assert(field.getValue('key.0') === 3);
-                assert(field.getValue('key.1') === undefined);
-                assert(field.getValue('key.2') === undefined);
-                assert(field.getValue('key.3') === undefined);
+                assert(getFieldValue(field, 'key.0') === 3);
+                assert(getFieldValue(field, 'key.1') === undefined);
+                assert(getFieldValue(field, 'key.2') === undefined);
+                assert(getFieldValue(field, 'key.3') === undefined);
 
                 /// 删除最后一个元素
                 const field2 = new Field(this, { parseName: true });
@@ -844,21 +853,21 @@ describe('field', () => {
 
                 field.deleteArrayValue('key2', 1);
 
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 2);
-                assert(field.getValue('key2.2.id') === 3);
-                assert(field.getValue('key2.3.id') === undefined);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 2);
+                assert(getFieldValue(field, 'key2.2.id') === 3);
+                assert(getFieldValue(field, 'key2.3.id') === undefined);
 
                 field.deleteArrayValue('key2', 1);
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 3);
-                assert(field.getValue('key2.2.id') === undefined);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 3);
+                assert(getFieldValue(field, 'key2.2.id') === undefined);
 
                 field.deleteArrayValue('key2', 0);
-                assert(field.getValue('key2.0.id') === 3);
-                assert(field.getValue('key2.1.id') === undefined);
-                assert(field.getValue('key2.2.id') === undefined);
-                assert(field.getValue('key2.3.id') === undefined);
+                assert(getFieldValue(field, 'key2.0.id') === 3);
+                assert(getFieldValue(field, 'key2.1.id') === undefined);
+                assert(getFieldValue(field, 'key2.2.id') === undefined);
+                assert(getFieldValue(field, 'key2.3.id') === undefined);
 
             });
 
@@ -870,22 +879,22 @@ describe('field', () => {
                 field.init('key2[3].id', { initValue: 3 });
 
                 field.deleteArrayValue('key2', 1);
-                assert(field.getValue('key2[0].id') === 0);
-                assert(field.getValue('key2[1].id') === 2);
-                assert(field.getValue('key2[2].id') === 3);
-                assert(field.getValue('key2[3].id') === undefined);
+                assert(getFieldValue(field, 'key2[0].id') === 0);
+                assert(getFieldValue(field, 'key2[1].id') === 2);
+                assert(getFieldValue(field, 'key2[2].id') === 3);
+                assert(getFieldValue(field, 'key2[3].id') === undefined);
 
                 field.deleteArrayValue('key2', 1);
-                assert(field.getValue('key2[0].id') === 0);
-                assert(field.getValue('key2[1].id') === 3);
-                assert(field.getValue('key2[2].id') === undefined);
-                assert(field.getValue('key2[3].id') === undefined);
+                assert(getFieldValue(field, 'key2[0].id') === 0);
+                assert(getFieldValue(field, 'key2[1].id') === 3);
+                assert(getFieldValue(field, 'key2[2].id') === undefined);
+                assert(getFieldValue(field, 'key2[3].id') === undefined);
 
                 field.deleteArrayValue('key2', 0);
-                assert(field.getValue('key2[0].id') === 3);
-                assert(field.getValue('key2[1].id') === undefined);
-                assert(field.getValue('key2[2].id') === undefined);
-                assert(field.getValue('key2[3].id') === undefined);
+                assert(getFieldValue(field, 'key2[0].id') === 3);
+                assert(getFieldValue(field, 'key2[1].id') === undefined);
+                assert(getFieldValue(field, 'key2[2].id') === undefined);
+                assert(getFieldValue(field, 'key2[3].id') === undefined);
             });
 
             it('should remove 2 field item with deleteArrayValue(key,index,2)', () => {
@@ -897,10 +906,10 @@ describe('field', () => {
 
                 field.deleteArrayValue('key', 1, 2);
 
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 3);
-                assert(field.getValue('key.2') === undefined);
-                assert(field.getValue('key.3') === undefined);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 3);
+                assert(getFieldValue(field, 'key.2') === undefined);
+                assert(getFieldValue(field, 'key.3') === undefined);
 
                 field.init('key2.0.id', { initValue: 0 });
                 field.init('key2.1.id', { initValue: 1 });
@@ -909,10 +918,10 @@ describe('field', () => {
 
                 field.deleteArrayValue('key2', 1, 2);
 
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 3);
-                assert(field.getValue('key2.2.id') === undefined);
-                assert(field.getValue('key2.3.id') === undefined);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 3);
+                assert(getFieldValue(field, 'key2.2.id') === undefined);
+                assert(getFieldValue(field, 'key2.3.id') === undefined);
             });
             it('should add item with addArrayValue(key,index,value)', () => {
                 const field = new Field(this, { parseName: true });
@@ -922,10 +931,10 @@ describe('field', () => {
 
                 field.addArrayValue('key', 1, 100);
 
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 100);
-                assert(field.getValue('key.2') === 1);
-                assert(field.getValue('key.3') === 2);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 100);
+                assert(getFieldValue(field, 'key.2') === 1);
+                assert(getFieldValue(field, 'key.3') === 2);
 
                 field.init('key2.0.id', { initValue: 0 });
                 field.init('key2.1.id', { initValue: 1 });
@@ -933,10 +942,10 @@ describe('field', () => {
 
                 field.addArrayValue('key2', 1, {id: 100});
 
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 100);
-                assert(field.getValue('key2.2.id') === 1);
-                assert(field.getValue('key2.3.id') === 2);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 100);
+                assert(getFieldValue(field, 'key2.2.id') === 1);
+                assert(getFieldValue(field, 'key2.3.id') === 2);
 
             });
             it('should add 2 item with spliceValue(key,index, 0, ...argv)', () => {
@@ -947,11 +956,11 @@ describe('field', () => {
 
                 field.addArrayValue('key', 1, 100, 20);
 
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 100);
-                assert(field.getValue('key.2') === 20);
-                assert(field.getValue('key.3') === 1);
-                assert(field.getValue('key.4') === 2);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 100);
+                assert(getFieldValue(field, 'key.2') === 20);
+                assert(getFieldValue(field, 'key.3') === 1);
+                assert(getFieldValue(field, 'key.4') === 2);
 
                 field.init('key2.0.id', { initValue: 0 });
                 field.init('key2.1.id', { initValue: 1 });
@@ -959,11 +968,11 @@ describe('field', () => {
 
                 field.addArrayValue('key2', 1, {id: 100}, {id: 20});
 
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 100);
-                assert(field.getValue('key2.2.id') === 20);
-                assert(field.getValue('key2.3.id') === 1);
-                assert(field.getValue('key2.4.id') === 2);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 100);
+                assert(getFieldValue(field, 'key2.2.id') === 20);
+                assert(getFieldValue(field, 'key2.3.id') === 1);
+                assert(getFieldValue(field, 'key2.4.id') === 2);
 
             });
 
@@ -974,9 +983,9 @@ describe('field', () => {
                 field.init('key.2', { initValue: 2 });
 
                 field._spliceArrayValue('notexist', 0, 0);
-                assert(field.getValue('key.0') === 0);
-                assert(field.getValue('key.1') === 1);
-                assert(field.getValue('key.2') === 2);
+                assert(getFieldValue(field, 'key.0') === 0);
+                assert(getFieldValue(field, 'key.1') === 1);
+                assert(getFieldValue(field, 'key.2') === 2);
 
                 field.init('key2.0.id', { initValue: 0 });
                 field.init('key2.1.id', { initValue: 1 });
@@ -984,9 +993,9 @@ describe('field', () => {
 
                 field._spliceArrayValue('notexist', 1, 0);
 
-                assert(field.getValue('key2.0.id') === 0);
-                assert(field.getValue('key2.1.id') === 1);
-                assert(field.getValue('key2.2.id') === 2);
+                assert(getFieldValue(field, 'key2.0.id') === 0);
+                assert(getFieldValue(field, 'key2.1.id') === 1);
+                assert(getFieldValue(field, 'key2.2.id') === 2);
             });
 
             it('should compatible with special characters key', () => {
@@ -999,10 +1008,10 @@ describe('field', () => {
 
                 field.deleteArrayValue('$key', 3);
 
-                assert(field.getValue('$key.0') === 0);
-                assert(field.getValue('$key.1') === 1);
-                assert(field.getValue('$key.2') === 2);
-                assert(field.getValue('$key.3') === undefined);
+                assert(getFieldValue(field, '$key.0') === 0);
+                assert(getFieldValue(field, '$key.1') === 1);
+                assert(getFieldValue(field, '$key.2') === 2);
+                assert(getFieldValue(field, '$key.3') === undefined);
 
                 assert(field.getNames().length === 3);
             });

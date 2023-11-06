@@ -150,7 +150,7 @@ class Field {
             if (parseName) {
                 // when parseName is true, field should not store value locally. To prevent sync issues
                 if (!('value' in field)) {
-                    this._proxyFieldValue(field, name);
+                    this._proxyFieldValue(field);
                 }
             } else {
                 this.values[name] = originalValue;
@@ -167,7 +167,7 @@ class Field {
                 const cachedValue = getIn(this.values, name);
                 const initValue = typeof cachedValue !== 'undefined' ? cachedValue : defaultValue;
                 // when parseName is true, field should not store value locally. To prevent sync issues
-                this._proxyFieldValue(field, name);
+                this._proxyFieldValue(field);
                 field.value = initValue;
             } else {
                 const cachedValue = this.values[name];
@@ -248,21 +248,23 @@ class Field {
 
     _getInitMeta(name) {
         if (!(name in this.fieldsMeta)) {
-            this.fieldsMeta[name] = Object.assign({}, initMeta);
+            this.fieldsMeta[name] = Object.assign({ name }, initMeta);
         }
 
         return this.fieldsMeta[name];
     }
 
-    _proxyFieldValue(field, name) {
+    _proxyFieldValue(field) {
+        const _this = this;
         Object.defineProperty(field, 'value', {
             configurable: true,
             enumerable: true,
-            get: () => {
-                return getIn(this.values, name);
+            get() {
+                return getIn(_this.values, this.name);
             },
-            set: v => {
-                this.values = setIn(this.values, name, v);
+            set(v) {
+                // 此处this解释同上
+                _this.values = setIn(_this.values, this.name, v);
                 return true;
             },
         });
@@ -943,6 +945,8 @@ class Field {
             const list = l.list;
             list.forEach(i => {
                 this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
+                // 移位后，同步调整name
+                this.fieldsMeta[i.to].name = i.to;
             });
         });
 
