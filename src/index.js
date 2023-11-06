@@ -336,7 +336,13 @@ class Field {
             // step: render -> B mount -> 1. _saveRef(A, null) -> 2. _saveRef(B, ref) -> render
             // 1. _saveRef(A, null)
             const cache = this.fieldsMeta[name];
-            cache && this._setCache(name, key, cache);
+            if (cache) {
+                if (this.options.parseName) {
+                    // 若parseName模式下，因为value为getter、setter，所以将当前值记录到_value内
+                    cache._value = cache.value;
+                }
+                this._setCache(name, key, cache);
+            }
 
             // after destroy, delete data
             delete this.instance[name];
@@ -347,8 +353,11 @@ class Field {
 
         // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
         if (autoUnmount && !this.fieldsMeta[name] && this._getCache(name, key)) {
-            this.fieldsMeta[name] = this._getCache(name, key);
-            this.setValue(name, this.fieldsMeta[name] && this.fieldsMeta[name].value, false);
+            const cache = this._getCache(name, key);
+            this.fieldsMeta[name] = cache;
+            // 若parseName模式，则使用_value作为值设置到values内
+            this.setValue(name, this.options.parseName ? cache._value : cache.value, false);
+            this.options.parseName && '_value' in cache && delete cache._value;
         }
 
         // only one time here

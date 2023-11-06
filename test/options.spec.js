@@ -121,6 +121,40 @@ describe('options', () => {
         wrapper.find('button').simulate('click');
     });
 
+    it('same name field should cache value when use parseName=true and autoUnmount=true', function(done) {
+        const {useState, useMemo} = React;
+        // eslint-disable-next-line react/prop-types
+        function Demo({ visible = true, getField }) {
+            const field = Field.getUseField({useState, useMemo})({
+                autoUnmount: true,
+                parseName: true,
+                values: {
+                    name: 'aa'
+                }
+            });
+            getField(field);
+            return (
+              <div>
+                  <div>{visible && <Input {...field.init('name')}/>}</div>
+                  <div>{!visible && <Input {...field.init('name')}/>}</div>
+              </div>
+            );
+        }
+        let field;
+        wrapper = mount(<Demo getField={f => (field = f)}/>);
+        // 首先判断name值是否符合预期
+        assert.equal(field.getValue('name'), 'aa');
+        // 调整visible，使两个 input 同时触发卸载和挂载
+        wrapper.setProps({visible: false});
+        // 判断name值是否保留
+        assert.equal(field.getValue('name'), 'aa');
+        // 复原visible，使两个 input 同时触发挂载和卸载
+        wrapper.setProps({visible: true});
+        // 判断name是否保留
+        assert.equal(field.getValue('name'), 'aa');
+        done();
+    });
+
     it('should support autoUnmount=false', function(done) {
         class Demo extends React.Component {
             state = {
