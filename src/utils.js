@@ -163,19 +163,15 @@ export function getParams(ns, cb) {
  * e.g. { a: { b: 1 } } and 'a2', should return false
  * e.g. { a: { b: [0, 1] } } and 'a.b[0]' return true
  * e.g. { a: { b: [0, 1] } } and 'a.b[5]' return true (miss index means overwritten in array)
- * @param {object} newValues 写入对象
+ * @param {object} values 写入对象
  * @param {string} name 字段key
  */
-export function isOverwritten(newValues, name) {
-    if (!newValues || typeof newValues !== 'object' || !name || typeof name !== 'string') {
+export function isOverwritten(values, name) {
+    if (!values || typeof values !== 'object' || !name || typeof name !== 'string') {
         return false;
     }
-    // 若存在这个key，则代表被覆盖
-    if (hasIn(newValues, name)) {
-        return true;
-    }
     const paths = splitNameToPath(name);
-    let obj = newValues;
+    let obj = values;
     for (const path of paths) {
         if (path in obj) {
             const pathValue = obj[path];
@@ -193,7 +189,8 @@ export function isOverwritten(newValues, name) {
             return false;
         }
     }
-    return false;
+    // 代表 name in values，则返回 true
+    return true;
 }
 
 /**

@@ -236,6 +236,7 @@ describe('Field Utils', () => {
     describe('isOverwritten', () => {
         it('should return true while name is in values', () => {
             assert.equal(isOverwritten({ a: { b: 1 } }, 'a.b'), true);
+            assert.equal(isOverwritten({ a: { b: {} } }, 'a.b'), true);
             assert.equal(isOverwritten({ a: { b: ['b0'] } }, 'a.b[0]'), true);
         });
         it('should return true while miss the array index', () => {
@@ -249,6 +250,17 @@ describe('Field Utils', () => {
 
         it('should return true while some paths of name is overwritten by values', () => {
             assert.equal(isOverwritten({ a: { b: 1 } }, 'a.b.c'), true);
+        });
+        it('should return false while parameters is illegal', () => {
+            assert.equal(isOverwritten(null, 'a.b'), false);
+            assert.equal(isOverwritten(undefined, 'a.b'), false);
+            assert.equal(isOverwritten(0, 'a.b'), false);
+            assert.equal(isOverwritten('xxx', 'a.b'), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, undefined), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, null), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, 0), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, 1), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, {}), false);
         });
     });
 });
