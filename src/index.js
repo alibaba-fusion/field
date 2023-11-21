@@ -10,6 +10,7 @@ import {
     mapValidateRules,
     warning,
     cloneToRuleArr,
+    isOverwritten,
 } from './utils';
 
 const initMeta = {
@@ -496,8 +497,10 @@ class Field {
             // shallow merge
             let newValues = Object.assign({}, this.values, fieldsValue);
             const fields = this.getNames();
-            // record all old field values
-            const oldFieldValues = fields.map(name => ({ name, value: this.fieldsMeta[name].value }));
+            // record all old field values, exclude items overwritten by fieldsValue
+            const oldFieldValues = fields
+                .filter(name => !isOverwritten(fieldsValue, name))
+                .map(name => ({ name, value: this.fieldsMeta[name].value }));
             // assign lost field value to newValues
             oldFieldValues.forEach(({ name, value }) => {
                 if (!hasIn(newValues, name)) {

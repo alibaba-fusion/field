@@ -156,6 +156,47 @@ export function getParams(ns, cb) {
 }
 
 /**
+ * name是否被覆写
+ * e.g. { a: { b: 1 } } and 'a.b', should return true
+ * e.g. { a: { b: 1 } } and 'a.b.c', should return true
+ * e.g. { a: { b: 1 } } and 'a.b2', should return false
+ * e.g. { a: { b: 1 } } and 'a2', should return false
+ * e.g. { a: { b: [0, 1] } } and 'a.b[0]' return true
+ * e.g. { a: { b: [0, 1] } } and 'a.b[5]' return true (miss index means overwritten in array)
+ * @param {object} newValues 写入对象
+ * @param {string} name 字段key
+ */
+export function isOverwritten(newValues, name) {
+    if (!newValues || typeof newValues !== 'object' || !name || typeof name !== 'string') {
+        return false;
+    }
+    // 若存在这个key，则代表被覆盖
+    if (hasIn(newValues, name)) {
+        return true;
+    }
+    const paths = splitNameToPath(name);
+    let obj = newValues;
+    for (const path of paths) {
+        if (path in obj) {
+            const pathValue = obj[path];
+            // 任意一层path值不是对象了，则代表被覆盖
+            if (!pathValue || typeof pathValue !== 'object') {
+                return true;
+            } else {
+                obj = pathValue;
+            }
+        } else {
+            // 数组的index已经移除，则代表被覆写
+            if (Array.isArray(obj)) {
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
+/**
  * 从组件事件中获取数据
  * @param e Event或者value
  * @returns value

@@ -1,6 +1,15 @@
 import React, { isValidElement, cloneElement } from 'react';
 import assert from 'power-assert';
-import { getErrorStrs, hasIn, getIn, setIn, deleteIn, cloneToRuleArr, splitNameToPath } from "../src/utils";
+import {
+    getErrorStrs,
+    hasIn,
+    getIn,
+    setIn,
+    deleteIn,
+    cloneToRuleArr,
+    splitNameToPath,
+    isOverwritten,
+} from '../src/utils';
 
 /* eslint-disable react/jsx-filename-extension */
 
@@ -75,17 +84,17 @@ describe('Field Utils', () => {
             assert(!hasIn(null, 'a.b'));
         });
         it('should return false when name is blank or nil', () => {
-            assert(!hasIn({a: 1}, ''));
-            assert(!hasIn({a: 1}, undefined));
-            assert(!hasIn({a: 1}, null));
+            assert(!hasIn({ a: 1 }, ''));
+            assert(!hasIn({ a: 1 }, undefined));
+            assert(!hasIn({ a: 1 }, null));
         });
         it('should return true when has property', () => {
-            assert(hasIn({a: {b: 1}}, 'a.b'));
+            assert(hasIn({ a: { b: 1 } }, 'a.b'));
         });
         it('should return false when has no property', () => {
-            assert(!hasIn({a: {b: 1}}, 'a.b.c'));
-            assert(!hasIn({a: {b: 1}}, 'a.c'));
-            assert(!hasIn({a: {b: 1}}, 'a[0]'));
+            assert(!hasIn({ a: { b: 1 } }, 'a.b.c'));
+            assert(!hasIn({ a: { b: 1 } }, 'a.c'));
+            assert(!hasIn({ a: { b: 1 } }, 'a[0]'));
         });
     });
 
@@ -124,11 +133,11 @@ describe('Field Utils', () => {
 
         it('should return undefined when name is not exists', () => {
             // a is not a object
-            assert(getIn({a: 1}, 'a.a') === undefined);
+            assert(getIn({ a: 1 }, 'a.a') === undefined);
             // has not property
-            assert(getIn({a: {}}, 'b.c') === undefined);
+            assert(getIn({ a: {} }, 'b.c') === undefined);
             // is array without the index
-            assert(getIn({a: []}, 'a[0]') === undefined);
+            assert(getIn({ a: [] }, 'a[0]') === undefined);
         });
     });
 
@@ -203,6 +212,7 @@ describe('Field Utils', () => {
             assert.deepEqual(deleteIn({ a: { b: [1, 2, 3] } }, 'a.b.0'), { a: { b: [, 2, 3] } });
         });
     });
+
     describe('cloneToRuleArr', () => {
         it('should return [] when rules is not empty', () => {
             assert.deepEqual(cloneToRuleArr(), []);
@@ -220,6 +230,25 @@ describe('Field Utils', () => {
             const cloned = cloneToRuleArr(rule);
             cloned[0].validate = () => {};
             assert(!('validate' in rule));
+        });
+    });
+
+    describe('isOverwritten', () => {
+        it('should return true while name is in values', () => {
+            assert.equal(isOverwritten({ a: { b: 1 } }, 'a.b'), true);
+            assert.equal(isOverwritten({ a: { b: ['b0'] } }, 'a.b[0]'), true);
+        });
+        it('should return true while miss the array index', () => {
+            assert.equal(isOverwritten({ a: { b: ['b0', 'b1'] } }, 'a.b[5]'), true);
+            assert.equal(isOverwritten({ a: { b: ['b0', 'b1'] } }, 'a.b.5'), true);
+        });
+        it('should return false while name is not in values', () => {
+            assert.equal(isOverwritten({ a: { b: 1 } }, 'a.c'), false);
+            assert.equal(isOverwritten({ a: { b: 1 } }, 'g'), false);
+        });
+
+        it('should return true while some paths of name is overwritten by values', () => {
+            assert.equal(isOverwritten({ a: { b: 1 } }, 'a.b.c'), true);
         });
     });
 });

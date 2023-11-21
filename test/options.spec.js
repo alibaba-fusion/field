@@ -18,7 +18,7 @@ describe('options', () => {
             wrapper.unmount();
             wrapper = null;
         }
-    })
+    });
     it('should support autoUnmount', function(done) {
         class Demo extends React.Component {
             state = {
@@ -30,13 +30,10 @@ describe('options', () => {
                 const init = this.field.init;
                 return (
                     <div>
-                        <Input {...init('input')} />{' '}
-                        {this.state.show ? <Input {...init('input2')} /> : null}
+                        <Input {...init('input')} /> {this.state.show ? <Input {...init('input2')} /> : null}
                         <button
                             onClick={() => {
-                                assert(
-                                    'input2' in this.field.getValues() === false
-                                );
+                                assert('input2' in this.field.getValues() === false);
                                 done();
                             }}
                         >
@@ -63,16 +60,10 @@ describe('options', () => {
                 const init = this.field.init;
                 return (
                     <div>
-                        {this.state.show ? (
-                            <Input {...init('input')} key="1" />
-                        ) : (
-                            <Input {...init('input')} key="2" />
-                        )}
+                        {this.state.show ? <Input {...init('input')} key="1" /> : <Input {...init('input')} key="2" />}
                         <button
                             onClick={() => {
-                                assert(
-                                    'input' in this.field.getValues() === true
-                                );
+                                assert('input' in this.field.getValues() === true);
                             }}
                         >
                             click
@@ -100,12 +91,10 @@ describe('options', () => {
                 return (
                     <div>
                         {this.state.show ? <Input {...init('input')} /> : null}
-                        <Input {...init('input', {initValue: 'test'})} />
+                        <Input {...init('input', { initValue: 'test' })} />
                         <button
                             onClick={() => {
-                                assert(
-                                    'input' in this.field.getValues() === true
-                                );
+                                assert('input' in this.field.getValues() === true);
                                 done();
                             }}
                         >
@@ -122,34 +111,34 @@ describe('options', () => {
     });
 
     it('same name field should cache value when use parseName=true and autoUnmount=true', function(done) {
-        const {useState, useMemo} = React;
+        const { useState, useMemo } = React;
         // eslint-disable-next-line react/prop-types
         function Demo({ visible = true, getField }) {
-            const field = Field.getUseField({useState, useMemo})({
+            const field = Field.getUseField({ useState, useMemo })({
                 autoUnmount: true,
                 parseName: true,
                 values: {
-                    name: 'aa'
-                }
+                    name: 'aa',
+                },
             });
             getField(field);
             return (
-              <div>
-                  <div>{visible && <Input {...field.init('name')}/>}</div>
-                  <div>{!visible && <Input {...field.init('name')}/>}</div>
-              </div>
+                <div>
+                    <div>{visible && <Input {...field.init('name')} />}</div>
+                    <div>{!visible && <Input {...field.init('name')} />}</div>
+                </div>
             );
         }
         let field;
-        wrapper = mount(<Demo getField={f => (field = f)}/>);
+        wrapper = mount(<Demo getField={f => (field = f)} />);
         // 首先判断name值是否符合预期
         assert.equal(field.getValue('name'), 'aa');
         // 调整visible，使两个 input 同时触发卸载和挂载
-        wrapper.setProps({visible: false});
+        wrapper.setProps({ visible: false });
         // 判断name值是否保留
         assert.equal(field.getValue('name'), 'aa');
         // 复原visible，使两个 input 同时触发挂载和卸载
-        wrapper.setProps({visible: true});
+        wrapper.setProps({ visible: true });
         // 判断name是否保留
         assert.equal(field.getValue('name'), 'aa');
         done();
@@ -167,16 +156,10 @@ describe('options', () => {
                 return (
                     <div>
                         <Input {...init('input')} />
-                        {this.state.show ? (
-                            <Input
-                                {...init('input2', { initValue: 'test2' })}
-                            />
-                        ) : null}
+                        {this.state.show ? <Input {...init('input2', { initValue: 'test2' })} /> : null}
                         <button
                             onClick={() => {
-                                assert(
-                                    this.field.getValue('input2') === 'test2'
-                                );
+                                assert(this.field.getValue('input2') === 'test2');
                             }}
                         >
                             click
@@ -205,17 +188,13 @@ describe('options', () => {
                     <div>
                         <Input
                             {...init('input', {
-                                rules: [
-                                    { required: true, message: 'cant be null' },
-                                ],
+                                rules: [{ required: true, message: 'cant be null' }],
                             })}
                         />
                         <button
                             onClick={() => {
                                 this.field.validateCallback(error => {
-                                    assert(
-                                        error.input.errors[0] === 'cant be null'
-                                    );
+                                    assert(error.input.errors[0] === 'cant be null');
                                 });
                             }}
                         >
@@ -235,31 +214,31 @@ describe('options', () => {
         it('should support `defaultValue`', function() {
             const inputValue = 'my value';
             const field = new Field(this);
-            field.init('input', {props: {defaultValue: inputValue}});
+            field.init('input', { props: { defaultValue: inputValue } });
             assert.equal(field.getValue('input'), inputValue);
         });
 
         it('should support `defaultValue` with different value name and make camel case', function() {
             const inputValue = 'my value';
             const field = new Field(this);
-            field.init('input', { valueName: 'myValue', props: { defaultMyValue: inputValue} });
+            field.init('input', { valueName: 'myValue', props: { defaultMyValue: inputValue } });
             assert.equal(field.getValue('input'), inputValue);
         });
 
         it('should support `defaultValue` with falsy value', function() {
             const inputValue = 0;
             const field = new Field(this);
-            field.init('input', {props: {defaultValue: inputValue}});
+            field.init('input', { props: { defaultValue: inputValue } });
             assert.equal(field.getValue('input'), inputValue);
         });
-    })
+    });
 
     describe('values', () => {
         it('should set default field input values when given `values` in constructor', function() {
             const inputValue = 'my value';
             const field = new Field(this, {
                 values: {
-                    input: inputValue
+                    input: inputValue,
                 },
             });
             assert.equal(field.getValue('input'), inputValue);
@@ -269,7 +248,7 @@ describe('options', () => {
             const inputValue = 0;
             const field = new Field(this, {
                 values: {
-                    input: inputValue
+                    input: inputValue,
                 },
             });
             field.init('input');
@@ -317,7 +296,7 @@ describe('options', () => {
                     input: inputValue,
                 },
             });
-            field.setValue('input', 1)
+            field.setValue('input', 1);
             assert.equal(field.getValue('input'), 1);
         });
 
@@ -349,7 +328,7 @@ describe('options', () => {
             const fieldDefault = 'field default value';
             const field = new Field(this, {
                 values: {
-                    input: fieldDefault
+                    input: fieldDefault,
                 },
             });
             field.init('input');
@@ -361,7 +340,7 @@ describe('options', () => {
             const fieldDefault = 'field default value';
             const field = new Field(this, {
                 values: {
-                    input: fieldDefault
+                    input: fieldDefault,
                 },
             });
             field.init('input');
@@ -370,7 +349,7 @@ describe('options', () => {
         });
 
         it('should return `undefined` after `remove` then re-`init`', function() {
-            const field = new Field(this, {values: {input: 4}});
+            const field = new Field(this, { values: { input: 4 } });
             field.init('input');
             field.remove('input');
             field.init('input');
@@ -382,10 +361,10 @@ describe('options', () => {
             const inputValue = 0;
             const field = new Field(this, {
                 values: {
-                    input: inputValue
+                    input: inputValue,
                 },
             });
-            field.init('input', {initValue: 1});
+            field.init('input', { initValue: 1 });
             assert.equal(field.getValue('input'), inputValue);
         });
     });
@@ -417,14 +396,14 @@ describe('options', () => {
         });
 
         it('should return constructor value for `names` if `getValues` called before init', function() {
-            const field = new Field(this, {parseName: true, values: {a: 1, b: 2, c: 3}});
-            const {a, b} = field.getValues(['a', 'b']);
+            const field = new Field(this, { parseName: true, values: { a: 1, b: 2, c: 3 } });
+            const { a, b } = field.getValues(['a', 'b']);
             assert(a === 1);
             assert(b === 2);
         });
         it('should return all of constructor value if `getValues` called with no names before init', function() {
-            const field = new Field(this, {parseName: true, values: {a: 1, b: 2, c: 3}});
-            const {a, b, c} = field.getValues();
+            const field = new Field(this, { parseName: true, values: { a: 1, b: 2, c: 3 } });
+            const { a, b, c } = field.getValues();
             assert(a === 1);
             assert(b === 2);
             assert(c === 3);
@@ -466,7 +445,7 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
+                        myValue: fieldDefault,
                     },
                 },
             });
@@ -479,7 +458,7 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
+                        myValue: fieldDefault,
                     },
                 },
             });
@@ -492,15 +471,13 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
+                        myValue: fieldDefault,
                     },
                 },
             });
-            field.setValue('input.myValue', 1)
+            field.setValue('input.myValue', 1);
             assert.equal(field.getValue('input.myValue'), 1);
         });
-
-
 
         it('should remove top level field after removed', function() {
             const fieldDefault = 'field default value';
@@ -508,8 +485,8 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
-                    }
+                        myValue: fieldDefault,
+                    },
                 },
             });
             field.init('input.myValue');
@@ -523,8 +500,8 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
-                    }
+                        myValue: fieldDefault,
+                    },
                 },
             });
             field.init('input.myValue');
@@ -539,8 +516,8 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
-                    }
+                        myValue: fieldDefault,
+                    },
                 },
             });
             field.init('input.myValue');
@@ -607,7 +584,7 @@ describe('options', () => {
                     values: {
                         input: {
                             myValue: fieldDefault,
-                            otherValue: fieldDefault
+                            otherValue: fieldDefault,
                         },
                     },
                 });
@@ -625,7 +602,7 @@ describe('options', () => {
                     values: {
                         input: {
                             myValue: fieldDefault,
-                            otherValue: fieldDefault
+                            otherValue: fieldDefault,
                         },
                     },
                 });
@@ -655,7 +632,7 @@ describe('options', () => {
                     values: {
                         input: {
                             myValue: fieldDefault,
-                            otherValue: fieldDefault
+                            otherValue: fieldDefault,
                         },
                     },
                 });
@@ -681,7 +658,7 @@ describe('options', () => {
                     values: {
                         input: {
                             myValue: fieldDefault,
-                            otherValue: fieldDefault
+                            otherValue: fieldDefault,
                         },
                     },
                 });
@@ -704,9 +681,9 @@ describe('options', () => {
                 parseName: true,
                 values: {
                     input: {
-                        myValue: fieldDefault
-                    }
-                }
+                        myValue: fieldDefault,
+                    },
+                },
             });
 
             field.init('input.myValue', { initValue });
@@ -716,6 +693,43 @@ describe('options', () => {
                     myValue: fieldDefault,
                 },
             });
+        });
+
+        // Fix https://github.com/alibaba-fusion/next/issues/4525
+        it('overwrite values by setValues', function() {
+            const field = new Field(this, {
+                parseName: true,
+                values: {
+                    one: [
+                        [
+                            {
+                                b: { name: 'zhangsan', age: 17 },
+                            },
+                        ],
+                    ],
+                    two: { code: '555' },
+                },
+            });
+            const name = field.init('one.0.0.b.name');
+            const age = field.init('one.0.0.b.age');
+            const code = field.init('two.code');
+            assert.equal(name.value, 'zhangsan');
+            assert.equal(age.value, 17);
+            assert.equal(code.value, '555');
+
+            field.setValues({
+                one: [
+                    [
+                        {
+                            b: null,
+                        },
+                    ],
+                ],
+                two: '',
+            });
+            assert.equal(field.init('one.0.0.b.name').value, undefined);
+            assert.equal(field.init('one.0.0.b.age').value, undefined);
+            assert.equal(field.init('two.code').value, undefined);
         });
     });
 
@@ -780,7 +794,10 @@ describe('options', () => {
         it('should pass error messages to `processErrorMessage` on validate', function(done) {
             const mySpy = spy();
             const field = new Field(this, { processErrorMessage: mySpy });
-            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+            const inited = field.init('input', {
+                initValue: 'test',
+                rules: [{ minLength: 10, message: 'my error message' }],
+            });
 
             wrapper = mount(<Input {...inited} />);
             field.validateCallback();
@@ -795,7 +812,10 @@ describe('options', () => {
         it('should pass error messages to `afterValidateRerender` on validate', function(done) {
             const mySpy = spy();
             const field = new Field(this, { afterValidateRerender: mySpy });
-            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+            const inited = field.init('input', {
+                initValue: 'test',
+                rules: [{ minLength: 10, message: 'my error message' }],
+            });
 
             wrapper = mount(<Input {...inited} />);
             field.validateCallback();
@@ -817,8 +837,8 @@ describe('options', () => {
                 messages: {
                     string: {
                         minLength: 'custom error message',
-                    }
-                }
+                    },
+                },
             });
             const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10 }] });
 
@@ -831,7 +851,7 @@ describe('options', () => {
             assert.equal(mySpy.args[0][0].instance, field.instance);
 
             done();
-        })
+        });
 
         it('should prefer user passed messages', function(done) {
             const mySpy = spy();
@@ -840,10 +860,13 @@ describe('options', () => {
                 messages: {
                     string: {
                         minLength: 'custom error message',
-                    }
-                }
+                    },
+                },
             });
-            const inited = field.init('input', { initValue: 'test', rules: [{ minLength: 10, message: 'my error message' }] });
+            const inited = field.init('input', {
+                initValue: 'test',
+                rules: [{ minLength: 10, message: 'my error message' }],
+            });
 
             wrapper = mount(<Input {...inited} />);
             field.validateCallback();
@@ -854,6 +877,6 @@ describe('options', () => {
             assert.equal(mySpy.args[0][0].instance, field.instance);
 
             done();
-        })
-    })
+        });
+    });
 });
