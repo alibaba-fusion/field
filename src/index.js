@@ -23,7 +23,7 @@ const initMeta = {
 
 class Field {
     static create(com, options = {}) {
-        return new this(com, options);
+        return new Field(com, options);
     }
 
     static getUseField({ useState, useMemo }) {
