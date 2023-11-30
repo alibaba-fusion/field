@@ -11,6 +11,7 @@ lib/
 
 # misc
 .idea/
+.node/
 .happypack
 .DS_Store
 *.swp

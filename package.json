@@ -5,10 +5,12 @@
   "files": [
     "demo/",
     "lib/",
+    "src/",
     "build/",
     "types/"
   ],
   "main": "lib/index.js",
+  "module": "src/index.js",
   "types": "types/index.d.ts",
   "stylePath": "style.js",
   "scripts": {
@@ -42,6 +44,7 @@
   ],
   "dependencies": {
     "@alifd/validate": "^1.2.0",
+    "eventemitter3": "^5.0.1",
     "prop-types": "^15.5.8"
   },
   "devDependencies": {
@@ -121,5 +124,8 @@
       "@semantic-release/npm",
       "@semantic-release/github"
     ]
+  },
+  "engines": {
+    "install-node": 14
   }
 }

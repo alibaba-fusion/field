@@ -149,12 +149,12 @@ export type InitOption<T = any> = {
 };
 
 export type ValidateResults = {
-    errors: any[],
-    values: any
-}
+    errors: any[];
+    values: any;
+};
 
-export default class Field  {
-/**
+export default class Field {
+    /**
      *
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
@@ -162,7 +162,7 @@ export default class Field  {
     constructor(contextComp: any, options?: FieldOption);
 
     /**
-     * 
+     *
      * @param contextComp 传入调用class的this
      * @param options 一些事件配置
      */
@@ -170,11 +170,18 @@ export default class Field  {
 
     /**
      *
-     * 
+     *
      * @param useState React compatible `useState` function
      * @returns Function
      */
-    static getUseField<T>(config: {useState: Function, useMemo: Function}): (options?: FieldOption) => Field;
+    static getUseField<T>(config: { useState: Function; useMemo: Function }): (options?: FieldOption) => Field;
+
+    /**
+     * @param useState React compatible `useState` function
+     * @param useState React compatible `useState` function
+     * @returns any
+     */
+    static getUseWatch<T>(config: { useState: Function; useEffect: Function }): (field: Field, name: string) => T;
 
     /**
      * 初始化每个组件
@@ -216,10 +223,7 @@ export default class Field  {
      * @param names
      * @param callback
      */
-    validateCallback(
-        names?: string[] | string,
-        callback?: (errors: any[], values: object) => void
-    ): void;
+    validateCallback(names?: string[] | string, callback?: (errors: any[], values: object) => void): void;
 
     /**
      * 校验
@@ -235,9 +239,7 @@ export default class Field  {
      * 校验
      * @param names
      */
-    validatePromise(
-        names?: string[] | string,
-    ): Promise<ValidateResults>;
+    validatePromise(names?: string[] | string): Promise<ValidateResults>;
 
     /**
      * 校验并获取一组输入域的值与Error对象
@@ -304,11 +306,10 @@ export default class Field  {
 
     addArrayValue<T>(key: string, index: number, ...args: T[]): void;
     /**
-     * 
+     *
      * @param key 变量名
      * @param index 数组的第几个
      * @param howmany 删除几个，默认为1
      */
     deleteArrayValue(key: string, index: number, howmany?: number): void;
 }
-

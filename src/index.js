@@ -1,4 +1,5 @@
 import Validate from '@alifd/validate';
+import EventEmitter from 'eventemitter3';
 import {
     getValueFromEvent,
     getErrorStrs,
@@ -35,6 +36,24 @@ class Field {
         };
     }
 
+    static getUseWatch({ useState, useEffect }) {
+        return (field, name) => {
+            const [state, setState] = useState();
+            useEffect(() => {
+                const handle = nameArg => {
+                    if (name === nameArg) {
+                        setState(field.getValue(name));
+                    }
+                };
+                field.ee.addEventListener('rerender', handle);
+                return () => {
+                    field.ee.removeEventListener('rerender', handle);
+                };
+            }, [field]);
+            return state;
+        };
+    }
+
     constructor(com, options = {}) {
         if (!com) {
             warning('`this` is missing in `Field`, you should use like `new Field(this)`');
@@ -60,6 +79,7 @@ class Field {
                 scrollToFirstError: true,
                 first: false,
                 onChange: () => {},
+                onUpdate: () => {},
                 autoUnmount: true,
                 autoValidate: true,
             },
@@ -89,6 +109,8 @@ class Field {
         ].forEach(m => {
             this[m] = this[m].bind(this);
         });
+
+        this.ee = new EventEmitter();
     }
 
     setOptions(options) {
@@ -924,7 +946,7 @@ class Field {
                 const idx = parseInt(ret[2]); // get index of 'key.0.name'
 
                 if (idx >= startIndex) {
-                    let l = listMap[idx];
+                    const l = listMap[idx];
                     const item = {
                         from: n,
                         to: n.replace(keyReg, (match, p1) => `${p1}${idx - offset}`),
@@ -1014,7 +1036,7 @@ class Field {
                 const index = parseInt(ret[1]);
 
                 if (index > startIndex) {
-                    let l = listMap[index];
+                    const l = listMap[index];
                     const item = {
                         from: n,
                         to: `${keyMatch.replace('{index}', index - 1)}${n.replace(ret[0], '')}`,
@@ -1093,6 +1115,7 @@ class Field {
                 this.com.forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
             }
         }
+        this.ee.emit('rerender', name);
     }
 
     _get(name) {
