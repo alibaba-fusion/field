@@ -1,5 +1,4 @@
 import Validate from '@alifd/validate';
-import EventEmitter from 'eventemitter3';
 import {
     getValueFromEvent,
     getErrorStrs,
@@ -36,20 +35,38 @@ class Field {
         };
     }
 
-    static getUseWatch({ useState, useEffect }) {
+    static getUseWatch({ useState, useEffect, useRef }) {
         return (field, name) => {
-            const [state, setState] = useState();
+            const [state, setState] = useState(() => field.getValue(name));
+            const ref = useRef(state);
+
             useEffect(() => {
-                const handle = nameArg => {
-                    if (name === nameArg) {
-                        setState(field.getValue(name));
+                // deal with field or name change
+                const nextValue = field.getValue(name);
+                if (nextValue !== ref.current) {
+                    setState(nextValue);
+                    ref.current = nextValue;
+                }
+
+                // deal with value change
+                const listener = nameArg => {
+                    // name is undefined: setValues()
+                    // name is defined: setValue(), init(), unmount()
+                    if (!name || name === nameArg) {
+                        const newValue = field.getValue(name);
+                        // change state only when values are actually changed
+                        if (newValue !== ref.current) {
+                            setState(newValue);
+                            ref.current = newValue;
+                        }
                     }
                 };
-                field.ee.addEventListener('rerender', handle);
+                field._valueListeners.add(listener);
                 return () => {
-                    field.ee.removeEventListener('rerender', handle);
+                    field._valueListeners.delete(listener);
                 };
-            }, [field]);
+            }, [field, name]);
+
             return state;
         };
     }
@@ -79,7 +96,6 @@ class Field {
                 scrollToFirstError: true,
                 first: false,
                 onChange: () => {},
-                onUpdate: () => {},
                 autoUnmount: true,
                 autoValidate: true,
             },
@@ -110,7 +126,7 @@ class Field {
             this[m] = this[m].bind(this);
         });
 
-        this.ee = new EventEmitter();
+        this._valueListeners = new Set();
     }
 
     setOptions(options) {
@@ -163,6 +179,10 @@ class Field {
             setValueFormatter,
             rules: cloneToRuleArr(rules),
             ref: originalProps.ref,
+        });
+
+        this._valueListeners.forEach(listener => {
+            listener(name);
         });
 
         // Controlled Component, should always equal props.value
@@ -505,6 +525,10 @@ class Field {
             this.values[name] = value;
         }
         reRender && this._reRender(name, 'setValue');
+
+        this._valueListeners.forEach(listener => {
+            listener(name);
+        });
     }
 
     setValues(fieldsValue = {}, reRender = true) {
@@ -533,6 +557,10 @@ class Field {
             this.values = newValues;
         }
         reRender && this._reRender();
+
+        this._valueListeners.forEach(listener => {
+            listener();
+        });
     }
 
     setError(name, errors) {
@@ -1115,7 +1143,6 @@ class Field {
                 this.com.forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
             }
         }
-        this.ee.emit('rerender', name);
     }
 
     _get(name) {

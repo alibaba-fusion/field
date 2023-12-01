@@ -43,7 +43,6 @@
   ],
   "dependencies": {
     "@alifd/validate": "^1.2.0",
-    "eventemitter3": "^5.0.1",
     "prop-types": "^15.5.8"
   },
   "devDependencies": {
