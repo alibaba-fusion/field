@@ -885,6 +885,9 @@ class Field {
                 } else {
                     this.values[name] = field.value;
                 }
+                this._valueListeners.forEach(listener => {
+                    listener(name);
+                });
             }
         });
 
@@ -926,6 +929,9 @@ class Field {
             } else {
                 delete this.values[name];
             }
+            this._valueListeners.forEach(listener => {
+                listener(name);
+            });
         });
     }
 
@@ -1031,6 +1037,10 @@ class Field {
         if (p) {
             p.splice(index, howmany, ...argv);
         }
+
+        this._valueListeners.forEach(listener => {
+            listener();
+        });
 
         this._reRender();
     }
