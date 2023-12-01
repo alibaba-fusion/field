@@ -10,7 +10,6 @@
     "types/"
   ],
   "main": "lib/index.js",
-  "module": "src/index.js",
   "types": "types/index.d.ts",
   "stylePath": "style.js",
   "scripts": {
@@ -124,8 +123,5 @@
       "@semantic-release/npm",
       "@semantic-release/github"
     ]
-  },
-  "engines": {
-    "install-node": 14
   }
 }
