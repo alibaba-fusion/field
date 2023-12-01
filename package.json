@@ -5,7 +5,6 @@
   "files": [
     "demo/",
     "lib/",
-    "src/",
     "build/",
     "types/"
   ],
