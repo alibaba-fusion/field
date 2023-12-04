@@ -363,7 +363,10 @@ class Field {
 
         // only one time here
         const field = this._get(name);
+
+        //component is unloaded and autoUnmount to false
         if (!component && !autoUnmount) {
+            field.state = '';
             delete field.errors;
             delete field.rules;
             delete field.rulesMap;
