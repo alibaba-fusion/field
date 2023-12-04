@@ -223,4 +223,47 @@ describe('rules', () => {
         done();
     });
 
+    it('The autoUnmount is false and the verification is passed.', function(done) {
+        class Demo extends React.Component {
+            state = {
+                visible: true,
+            };
+            field = new Field(this, { autoUnmount: false });
+
+            render() {
+                const init = this.field.init;
+                return (
+                    <div>
+                        {this.state.visible && (
+                            <Input
+                                placeholder="try onBlur"
+                                {...init('input1', {
+                                    rules: [
+                                        {
+                                            required: true,
+                                            message: 'can not be empty',
+                                            trigger: ['onBlur', 'onChange'],
+                                        },
+                                    ],
+                                })}
+                            />
+                        )}
+                        <button
+                            onClick={() => {
+                                assert(this.field.getError('input1') === null);
+                            }}
+                        >
+                            click
+                        </button>
+                    </div>
+                );
+            }
+        }
+
+        const wrapper = mount(<Demo />);
+        wrapper.setState({ visible: false });
+        wrapper.find('button').simulate('click');
+
+        done();
+    });
 });

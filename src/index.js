@@ -363,6 +363,11 @@ class Field {
 
         // only one time here
         const field = this._get(name);
+        if (!component && !autoUnmount) {
+            delete field.errors;
+            delete field.rules;
+            delete field.rulesMap;
+        }
         if (field) {
             const ref = field.ref;
             if (ref) {
