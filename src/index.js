@@ -364,7 +364,7 @@ class Field {
         // only one time here
         const field = this._get(name);
 
-        //component is unloaded and autoUnmount to false
+        //When the autoUnmount is false, the component uninstallation needs to clear the verification information to avoid blocking the validation.
         if (!component && !autoUnmount) {
             field.state = '';
             delete field.errors;
