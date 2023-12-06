@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-filename-extension */
 import React from 'react';
+import ReactTestUtils from 'react-dom/test-utils';
 import Enzyme, { mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import assert from 'power-assert';
@@ -96,11 +97,9 @@ describe('rules', () => {
         // validator can't callback when option.rules is an empty Array
         mount(<Input {...field.init('input', { rules: [] })} />);
 
-        field.validatePromise()
-            .then(() => {
-                done();
-            })
-
+        field.validatePromise().then(() => {
+            done();
+        });
     });
 
     it('triger', function(done) {
@@ -168,31 +167,30 @@ describe('rules', () => {
         class Demo extends React.Component {
             field = new Field(this);
             userExists(rule, value) {
-              return new Promise((resolve, reject) => {
-                if (!value) {
-                  resolve();
-                } else {
-                  setTimeout(() => {
-                    if (value === 'frank') {
-                      reject([new Error('Sorry name existed')]);
+                return new Promise((resolve, reject) => {
+                    if (!value) {
+                        resolve();
                     } else {
-                      resolve();
+                        setTimeout(() => {
+                            if (value === 'frank') {
+                                reject([new Error('Sorry name existed')]);
+                            } else {
+                                resolve();
+                            }
+                        }, 100);
                     }
-                  }, 100);
-                }
-              });
+                });
             }
 
-
             render() {
-              const { getState, getError, init } = this.field;
+                const { getState, getError, init } = this.field;
 
-              return (
-                <div>
-                  <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
-                  <label>{getError('userName')}</label>
-                </div>
-              );
+                return (
+                    <div>
+                        <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
+                        <label>{getError('userName')}</label>
+                    </div>
+                );
             }
         }
 
@@ -207,7 +205,7 @@ describe('rules', () => {
 
     it('should rulesProps immutable', function(done) {
         const field = new Field(this);
-        const initRules= {
+        const initRules = {
             required: true,
             message: 'cant be null',
         };
@@ -223,4 +221,32 @@ describe('rules', () => {
         done();
     });
 
+    it('Should not block validation when component is unmounted while autoUnmount=false.', async function() {
+        const ref = { current: null };
+        const useField = Field.getUseField({ useState: React.useState, useMemo: React.useMemo });
+        function Demo1() {
+            const [visible, setVisible] = React.useState(true);
+            const field = useField({ autoUnmount: false });
+            ref.current = { setVisible, field };
+            if (!visible) {
+                return null;
+            }
+            return <Input {...field.init('input', { rules: [{ required: true }] })} />;
+        }
+        ReactTestUtils.act(() => {
+            mount(<Demo1 />);
+        });
+        assert(ref.current);
+        await ReactTestUtils.act(async () => {
+            const { errors } = await ref.current.field.validatePromise();
+            assert(errors);
+        });
+        ReactTestUtils.act(() => {
+            ref.current.setVisible(false);
+        });
+        await ReactTestUtils.act(async () => {
+            const { errors } = await ref.current.field.validatePromise();
+            assert(!errors);
+        });
+    });
 });
