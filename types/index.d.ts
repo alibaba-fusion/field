@@ -153,6 +153,12 @@ export type ValidateResults = {
     values: any;
 };
 
+export type WatchTriggerType = 'init' | 'change' | 'setValue' | 'unmount' | 'reset';
+
+export interface WatchCallback {
+    (name: string, value: unknown, oldValue: unknown, triggerType: WatchTriggerType): void;
+}
+
 declare class Field {
     /**
      * @param contextComp 传入调用class的this
@@ -302,15 +308,7 @@ declare class Field {
      * @param callback 变化回调
      * @returns 解除监听回调
      */
-    watch(
-        names: string[],
-        callback: (
-            name: string,
-            value: unknown,
-            oldValue: unknown,
-            triggerType: 'init' | 'change' | 'setValue' | 'unmount' | 'reset'
-        ) => void
-    ): () => void;
+    watch(names: string[], callback: WatchCallback): () => void;
 }
 
 export default Field;

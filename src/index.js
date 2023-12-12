@@ -986,7 +986,7 @@ class Field {
             }
         });
 
-        const oldNameValues = this.getValues(willChangeNames);
+        const oldValues = this.getValues(willChangeNames);
 
         // sort with index eg: [{index:1, list: [{from: 'key.2.name', to: 'key.1.name'}]}, {index:2, list: [...]}]
         const offsetList = Object.keys(listMap)
@@ -1028,7 +1028,7 @@ class Field {
         }
 
         for (const name of willChangeNames) {
-            this._triggerFieldChange(name, this.getValue(name), oldNameValues[name], 'setValue');
+            this._triggerFieldChange(name, this.getValue(name), oldValues[name], 'setValue');
         }
 
         this._reRender();
@@ -1081,7 +1081,7 @@ class Field {
                 }
             }
         });
-        const oldNameValues = this.getValues(willChangeNames);
+        const oldValues = this.getValues(willChangeNames);
 
         const idxList = Object.keys(listMap)
             .map(i => {
@@ -1118,7 +1118,7 @@ class Field {
             }
         }
         for (const name of willChangeNames) {
-            this._triggerFieldChange(name, this.getValue(name), oldNameValues[name], 'setValue');
+            this._triggerFieldChange(name, this.getValue(name), oldValues[name], 'setValue');
         }
     }
 
