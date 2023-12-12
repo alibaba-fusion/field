@@ -46,6 +46,7 @@ class Field {
         this.instance = {};
         this.instanceCount = {};
         this.reRenders = {};
+        this.listeners = {};
         // holds constructor values. Used for setting field defaults on init if no other value or initValue is passed.
         // Also used caching values when using `parseName: true` before a field is initialized
         this.values = Object.assign({}, options.values);
@@ -143,6 +144,8 @@ class Field {
             ref: originalProps.ref,
         });
 
+        let oldValue = field.value;
+
         // Controlled Component, should always equal props.value
         if (valueName in originalProps) {
             const originalValue = originalProps[valueName];
@@ -166,6 +169,9 @@ class Field {
         if (!('value' in field)) {
             if (parseName) {
                 const cachedValue = getIn(this.values, name);
+                if (typeof cachedValue !== 'undefined') {
+                    oldValue = cachedValue;
+                }
                 const initValue = typeof cachedValue !== 'undefined' ? cachedValue : defaultValue;
                 // when parseName is true, field should not store value locally. To prevent sync issues
                 this._proxyFieldValue(field);
@@ -174,6 +180,7 @@ class Field {
                 const cachedValue = this.values[name];
                 if (typeof cachedValue !== 'undefined') {
                     field.value = cachedValue;
+                    oldValue = cachedValue;
                 } else if (typeof defaultValue !== 'undefined') {
                     // should be same with parseName, but compatible with old versions
                     field.value = defaultValue;
@@ -181,6 +188,10 @@ class Field {
                 }
             }
         }
+
+        // field value init end
+        const newValue = field.value;
+        this._triggerFieldChange(name, newValue, oldValue, 'init');
 
         // Component props
         const inputProps = {
@@ -213,7 +224,10 @@ class Field {
 
         // step2: onChange(trigger=onChange by default) hack
         inputProps[trigger] = (...args) => {
+            const oldValue = this.getValue(name);
             this._updateFieldValue(name, ...args);
+            const newValue = this.getValue(name);
+            this._triggerFieldChange(name, newValue, oldValue, 'change');
 
             // clear validate error
             this._resetError(name);
@@ -348,7 +362,10 @@ class Field {
             // after destroy, delete data
             delete this.instance[name];
             delete this.reRenders[name];
+            const oldValue = this.getValue(name);
             this.remove(name);
+            const newValue = this.getValue(name);
+            this._triggerFieldChange(name, newValue, oldValue, 'unmount');
             return;
         }
 
@@ -357,7 +374,7 @@ class Field {
             const cache = this._getCache(name, key);
             this.fieldsMeta[name] = cache;
             // 若parseName模式，则使用_value作为值设置到values内
-            this.setValue(name, this.options.parseName ? cache._value : cache.value, false);
+            this.setValue(name, this.options.parseName ? cache._value : cache.value, false, false);
             this.options.parseName && '_value' in cache && delete cache._value;
         }
 
@@ -481,7 +498,8 @@ class Field {
         return allValues;
     }
 
-    setValue(name, value, reRender = true) {
+    setValue(name, value, reRender = true, triggerChange = true) {
+        const oldValue = this.getValue(name);
         if (name in this.fieldsMeta) {
             this.fieldsMeta[name].value = value;
         }
@@ -490,13 +508,17 @@ class Field {
         } else {
             this.values[name] = value;
         }
+        const newValue = this.getValue(name);
+        if (triggerChange) {
+            this._triggerFieldChange(name, newValue, oldValue, 'setValue');
+        }
         reRender && this._reRender(name, 'setValue');
     }
 
     setValues(fieldsValue = {}, reRender = true) {
         if (!this.options.parseName) {
             Object.keys(fieldsValue).forEach(name => {
-                this.setValue(name, fieldsValue[name], false);
+                this.setValue(name, fieldsValue[name], false, true);
             });
         } else {
             // NOTE: this is a shallow merge
@@ -505,6 +527,7 @@ class Field {
             // shallow merge
             let newValues = Object.assign({}, this.values, fieldsValue);
             const fields = this.getNames();
+            const allOldFieldValues = this.getValues(fields);
             // record all old field values, exclude items overwritten by fieldsValue
             const oldFieldValues = fields
                 .filter(name => !isOverwritten(fieldsValue, name))
@@ -517,6 +540,11 @@ class Field {
             });
             // store the new values
             this.values = newValues;
+
+            // trigger changes after update
+            for (const name of fields) {
+                this._triggerFieldChange(name, this.getValue(name), allOldFieldValues[name], 'setValue');
+            }
         }
         reRender && this._reRender();
     }
@@ -823,6 +851,7 @@ class Field {
 
         const names = ns || Object.keys(this.fieldsMeta);
 
+        const oldValues = this.getValues(names);
         if (!ns) {
             this.values = {};
         }
@@ -844,6 +873,7 @@ class Field {
                     this.values[name] = field.value;
                 }
             }
+            this._triggerFieldChange(name, this.getValue(name), oldValues[name], 'reset');
         });
 
         if (changed) {
@@ -924,6 +954,7 @@ class Field {
         const keyReg = new RegExp(`^(${replacedKey}.)(\\d+)`);
         const replaceArgv = [];
         const names = this.getNames();
+        const willChangeNames = [];
 
         // logic of offset fix begin
         names.forEach(n => {
@@ -937,6 +968,10 @@ class Field {
                         from: n,
                         to: n.replace(keyReg, (match, p1) => `${p1}${idx - offset}`),
                     };
+                    willChangeNames.push(item.from);
+                    if (names.includes(item.to)) {
+                        willChangeNames.push(item.to);
+                    }
                     if (!l) {
                         listMap[idx] = [item];
                     } else {
@@ -950,6 +985,8 @@ class Field {
                 }
             }
         });
+
+        const oldNameValues = this.getValues(willChangeNames);
 
         // sort with index eg: [{index:1, list: [{from: 'key.2.name', to: 'key.1.name'}]}, {index:2, list: [...]}]
         const offsetList = Object.keys(listMap)
@@ -990,6 +1027,10 @@ class Field {
             p.splice(index, howmany, ...argv);
         }
 
+        for (const name of willChangeNames) {
+            this._triggerFieldChange(name, this.getValue(name), oldNameValues[name], 'setValue');
+        }
+
         this._reRender();
     }
 
@@ -1015,6 +1056,7 @@ class Field {
          * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
          */
         const names = this.getNames();
+        const willChangeNames = [];
         names.forEach(n => {
             // is name in the target array?
             const ret = keyReg.exec(n);
@@ -1027,6 +1069,10 @@ class Field {
                         from: n,
                         to: `${keyMatch.replace('{index}', index - 1)}${n.replace(ret[0], '')}`,
                     };
+                    willChangeNames.push(item.from);
+                    if (names.includes(item.to)) {
+                        willChangeNames.push(item.to);
+                    }
                     if (!l) {
                         listMap[index] = [item];
                     } else {
@@ -1035,6 +1081,7 @@ class Field {
                 }
             }
         });
+        const oldNameValues = this.getValues(willChangeNames);
 
         const idxList = Object.keys(listMap)
             .map(i => {
@@ -1051,7 +1098,7 @@ class Field {
                 const list = l.list;
                 list.forEach(i => {
                     const v = this.getValue(i.from); // get index value
-                    this.setValue(i.to, v, false); // set value to index - 1
+                    this.setValue(i.to, v, false, false); // set value to index - 1
                 });
             });
 
@@ -1069,6 +1116,9 @@ class Field {
                 // this manually decrements the array length
                 parent.length--;
             }
+        }
+        for (const name of willChangeNames) {
+            this._triggerFieldChange(name, this.getValue(name), oldNameValues[name], 'setValue');
         }
     }
 
@@ -1113,6 +1163,50 @@ class Field {
         } else {
             return this.fieldsMeta;
         }
+    }
+
+    /**
+     *
+     * @param {string} name
+     * @param {*} value
+     * @param {*} oldValue
+     * @param {'init' | 'change' | 'setValue' | 'unmount' | 'reset'} triggerType
+     */
+    _triggerFieldChange(name, value, oldValue, triggerType) {
+        // same value should not trigger change
+        if (Object.is(value, oldValue)) {
+            return;
+        }
+        const listenerSet = this.listeners[name];
+        if (!listenerSet?.size) {
+            return;
+        }
+        for (const callback of listenerSet) {
+            callback(name, value, oldValue, triggerType);
+        }
+    }
+
+    /**
+     * 监听字段值变化
+     * @param {string[]} names 监听的name列表
+     * @param {Function} callback 变化回调
+     * @returns {Function} 解除监听回调
+     */
+    watch(names, callback) {
+        for (const name of names) {
+            if (!this.listeners[name]) {
+                this.listeners[name] = new Set();
+            }
+            const set = this.listeners[name];
+            set.add(callback);
+        }
+        return () => {
+            for (const name of names) {
+                if (this.listeners[name]) {
+                    this.listeners[name].delete(callback);
+                }
+            }
+        };
     }
 }
 

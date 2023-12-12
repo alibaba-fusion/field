@@ -233,6 +233,7 @@ let myfield = new Field(this [,options]);
 | remove           | 删除某一个或者一组控件的数据，删除后与之相关的 validate/value 都会被清空 | Function(name: String/String[])                                                    |                                |        |
 | addArrayValue    | 添加 name 是数组格式的数据, 并且自动处理其他 name 的数组错位问题         | Function(key: String, index: Number, value1, value2, ...)                          |                                |        |
 | deleteArrayValue | 删除 name 是数组格式的数据, 并且自动处理其他 name 的数组错位问题         | Function(key: String, index: Number, howmany)                                      |                                |        |
+| watch | 监听字段值变化         | Function(names: String[], value: unknown, oldValue: unknown, triggerType: 'init' | 'change' | 'setValue' | 'unmount' | 'reset')                                      |                                |        |
 
 #### init
 
