@@ -12,13 +12,12 @@
   "types": "types/index.d.ts",
   "stylePath": "style.js",
   "scripts": {
-    "start": "ice-scripts dev",
-    "build": "ice-scripts build",
+    "start": "build-scripts dev",
+    "build": "build-scripts build",
     "prepublishOnly": "npm run build",
-    "test": "ice-scripts test",
-    "test-watch": "ice-scripts test --jest-watchAll",
+    "test": "build-scripts test",
     "precommit": "lint-staged",
-    "eslint": "eslint '@(src|test)/**/*.@(js|jsx)'"
+    "eslint": "eslint '@(src|test)/**/*.ts'"
   },
   "lint-staged": {
     "@(src|scripts|docs/*/demo)/**/*.@(js|jsx)": [
@@ -36,23 +35,28 @@
   },
   "license": "MIT",
   "keywords": [
-    "ice",
     "react",
     "component"
   ],
   "dependencies": {
-    "@alifd/validate": "^1.2.0",
+    "@alifd/validate": "^2.0.0",
     "prop-types": "^15.5.8"
   },
   "devDependencies": {
+    "@alib/build-scripts": "^0.1.3",
     "@alifd/eslint-config-next": "^2.0.0",
     "@alifd/next": "^1.15.12",
     "@commitlint/cli": "^8.1.0",
-    "babel-eslint": "^10.0.2",
-    "babel-plugin-transform-jsx-list": "^0.1.0",
-    "babel-plugin-transform-object-assign": "^6.22.0",
-    "babel-plugin-transform-proto-to-assign": "^6.26.0",
-    "babel-plugin-transform-react-es6-displayname": "^1.0.0-beta1.4",
+    "@types/chai": "^4.3.11",
+    "@types/jest": "^26.0.24",
+    "@types/react": "^16.14.56",
+    "@types/react-dom": "^16.9.24",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "build-plugin-component": "^1.0.0",
+    "build-plugin-fusion": "^0.1.0",
+    "build-plugin-moment-locales": "^0.1.0",
+    "chai": "^4.4.1",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.14.0",
     "es6-promise-polyfill": "^1.2.0",
@@ -62,21 +66,17 @@
     "eslint-plugin-markdown": "^1.0.0",
     "eslint-plugin-react": "^7.14.2",
     "husky": "^3.0.0",
-    "ice-plugin-component": "^0.1.1",
-    "ice-plugin-fusion": "^0.1.4",
-    "ice-scripts": "^2.0.0",
     "lint-staged": "^9.2.0",
     "mocha": "^6.1.4",
     "moment": "^2.24.0",
-    "power-assert": "^1.6.1",
-    "prettier": "^1.18.2",
+    "prettier": "^3.2.4",
     "react": "^16.3.0",
     "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
     "redux": "^4.0.4",
     "semantic-release": "^17.2.3",
-    "sinon": "^7.3.2",
-    "typescript": "^3.5.3"
+    "sinon": "^16.1.3",
+    "typescript": "^4.9.5"
   },
   "componentConfig": {
     "name": "field",

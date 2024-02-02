@@ -9,14 +9,11 @@ order: 1
 
 manage value by `onChange`
 
-
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Input, Select, Range } from '@alifd/next';
 import Field from '@alifd/field';
-
-
 
 class App extends React.Component {
     field = new Field(this, {
@@ -34,42 +31,69 @@ class App extends React.Component {
                     this.field.setValue('sync', ` (${value.join(',')}) ready`);
                     break;
             }
-        }
+        },
     });
 
     render() {
-        const {init, getValue} = this.field;
+        const { init, getValue } = this.field;
         const layout = {
             marginBottom: 10,
-            width: 400
+            width: 400,
         };
 
-        return (<div>
-            <Input placeholder="controlled by onChange" {...init('input')} style={layout}/><br/>
-            <Input placeholder="under control" {...init('input')} style={layout}/><br/>
+        return (
+            <div>
+                <Input
+                    placeholder="controlled by onChange"
+                    {...init('input')}
+                    style={layout}
+                />
+                <br />
+                <Input
+                    placeholder="under control"
+                    {...init('input')}
+                    style={layout}
+                />
+                <br />
 
-            <Select style={layout} {...init('select', {initValue: 'lucy'})}>
-                <Select.Option value="jack">jack</Select.Option>
-                <Select.Option value="lucy">lucy</Select.Option>
-                <Select.Option value="disabled" disabled>disabled</Select.Option>
-                <Select.Option value="hugo">hugo</Select.Option>
-            </Select><br/>
+                <Select
+                    style={layout}
+                    {...init('select', { initValue: 'lucy' })}
+                >
+                    <Select.Option value="jack">jack</Select.Option>
+                    <Select.Option value="lucy">lucy</Select.Option>
+                    <Select.Option value="disabled" disabled>
+                        disabled
+                    </Select.Option>
+                    <Select.Option value="hugo">hugo</Select.Option>
+                </Select>
+                <br />
 
-            {
-                getValue('select') !== 'hugo' ?
+                {getValue('select') !== 'hugo' ? (
                     <Range
-                        style={{...layout, marginTop: 30}}
-                        slider={'double'} scales={10} marks={10}
-                        {...init('range', {initValue: [20, 40], trigger: 'onProcess'})}
-                    /> : null
-            }
-            <br/>
+                        style={{ ...layout, marginTop: 30 }}
+                        slider={'double'}
+                        scales={10}
+                        marks={10}
+                        {...init('range', {
+                            initValue: [20, 40],
+                            trigger: 'onProcess',
+                        })}
+                    />
+                ) : null}
+                <br />
 
-            <hr style={{marginBottom: 10}}/>
-            <Input placeholder="everyone can control me" {...init('sync')} style={layout}/><br/>
-        </div>);
+                <hr style={{ marginBottom: 10 }} />
+                <Input
+                    placeholder="everyone can control me"
+                    {...init('sync')}
+                    style={layout}
+                />
+                <br />
+            </div>
+        );
     }
 }
 
-ReactDOM.render(<App/>, mountNode);
-````
+ReactDOM.render(<App />, mountNode);
+```

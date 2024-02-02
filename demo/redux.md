@@ -9,7 +9,7 @@ order: 5
 
 set value in `componentWillReceiveProps`
 
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Input, Button } from '@alifd/next';
@@ -17,12 +17,12 @@ import Field from '@alifd/field';
 import { combineReducers, createStore } from 'redux';
 import { Provider, connect } from 'react-redux';
 
-function formReducer(state = {email: 'frankqian@qq.com'}, action) {
+function formReducer(state = { email: 'frankqian@qq.com' }, action) {
     switch (action.type) {
         case 'save_fields':
             return {
                 ...state,
-                ...action.payload
+                ...action.payload,
             };
         default:
             return state;
@@ -33,7 +33,7 @@ class Demo extends React.Component {
     componentWillReceiveProps(nextProps) {
         this.field.setValues({
             email: nextProps.email,
-            newlen: nextProps.email.length
+            newlen: nextProps.email.length,
         });
     }
 
@@ -44,55 +44,69 @@ class Demo extends React.Component {
             this.props.dispatch({
                 type: 'save_fields',
                 payload: {
-                    [name]: value
-                }
+                    [name]: value,
+                },
             });
-        }
+        },
     });
 
     setEmail() {
         this.props.dispatch({
             type: 'save_fields',
             payload: {
-                email: 'qq@gmail.com'
-            }
+                email: 'qq@gmail.com',
+            },
         });
     }
-
 
     render() {
         const init = this.field.init;
 
         const newLen = init('newlen', { initValue: this.props.email.length });
 
-        return (<div>
-            <Input {...init('email', { initValue: this.props.email }, {
-                rules: [
-                    {required: true, type: 'email', message: 'at least 5 chars'}
-                ]
-            })} />
-            now length is:{newLen.value}
-            <p>email: {this.props.email}</p>
-            <Button onClick={this.setEmail.bind(this)}>set</Button>
-        </div>);
+        return (
+            <div>
+                <Input
+                    {...init(
+                        'email',
+                        { initValue: this.props.email },
+                        {
+                            rules: [
+                                {
+                                    required: true,
+                                    type: 'email',
+                                    message: 'at least 5 chars',
+                                },
+                            ],
+                        }
+                    )}
+                />
+                now length is:{newLen.value}
+                <p>email: {this.props.email}</p>
+                <Button onClick={this.setEmail.bind(this)}>set</Button>
+            </div>
+        );
     }
 }
 
-
 const ReduxDemo = connect((state) => {
     return {
-        email: state.formReducer.email
+        email: state.formReducer.email,
     };
 })(Demo);
 
+const store = createStore(
+    combineReducers({
+        formReducer,
+    })
+);
 
-const store = createStore(combineReducers({
-    formReducer
-}));
-
-ReactDOM.render((<Provider store={store}>
-    <div>
-        <ReduxDemo />
-    </div>
-</Provider>), mountNode);
-````
+ReactDOM.render(
+    <Provider store={store}>
+        <div>
+            <ReduxDemo />
+        </div>
+    </Provider>,
+    mountNode
+);
+```

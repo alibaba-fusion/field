@@ -14,20 +14,18 @@ order: 10
 `must`: has api of `onChange`, so you can use `getValue` but you can't `setValue`
 `perfect support`: has api of `value` `onChange`. value: set data for component; onChange: return first param for component
 
-
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Button } from '@alifd/next';
 import Field from '@alifd/field';
-
 
 class Custom extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            value: typeof props.value === 'undefined' ? [] : props.value
+            value: typeof props.value === 'undefined' ? [] : props.value,
         };
     }
 
@@ -35,7 +33,10 @@ class Custom extends React.Component {
     componentWillReceiveProps(nextProps) {
         if ('value' in nextProps) {
             this.setState({
-                value: typeof nextProps.value === 'undefined' ? [] : nextProps.value
+                value:
+                    typeof nextProps.value === 'undefined'
+                        ? []
+                        : nextProps.value,
             });
         }
     }
@@ -45,25 +46,29 @@ class Custom extends React.Component {
         value.push('new');
 
         this.setState({
-            value
+            value,
         });
         this.props.onChange(value);
-    }
+    };
 
     render() {
-        return (<div className="custom">
-            {this.state.value.map((v, i) => {
-                return <Button key={i} >{v}</Button>;
-            })}
-            <Button type="primary" onClick={this.onAdd.bind(this)}>Add ＋ </Button>
-        </div>);
+        return (
+            <div className="custom">
+                {this.state.value.map((v, i) => {
+                    return <Button key={i}>{v}</Button>;
+                })}
+                <Button type="primary" onClick={this.onAdd.bind(this)}>
+                    Add ＋{' '}
+                </Button>
+            </div>
+        );
     }
 }
 
 /* eslint-disable react/no-multi-comp */
 class App extends React.Component {
     field = new Field(this, {
-        deepReset: true
+        deepReset: true,
     });
 
     onGetValue() {
@@ -73,21 +78,31 @@ class App extends React.Component {
     render() {
         const { init, setValue, reset } = this.field;
 
-        return (<div className="demo">
-            <Custom {...init('custom', {initValue: ['test']})} />
+        return (
+            <div className="demo">
+                <Custom {...init('custom', { initValue: ['test'] })} />
 
-            <br/><br/>
+                <br />
+                <br />
 
-            <Button type="primary" onClick={this.onGetValue.bind(this)}>getValue</Button>
-            <Button type="primary" onClick={() => setValue('custom', ['test', 'setValue'])}>setValue</Button>
-            <Button onClick={() => reset()}>reset</Button>
-        </div>);
+                <Button type="primary" onClick={this.onGetValue.bind(this)}>
+                    getValue
+                </Button>
+                <Button
+                    type="primary"
+                    onClick={() => setValue('custom', ['test', 'setValue'])}
+                >
+                    setValue
+                </Button>
+                <Button onClick={() => reset()}>reset</Button>
+            </div>
+        );
     }
 }
-ReactDOM.render(<App/>, mountNode);
-````
+ReactDOM.render(<App />, mountNode);
+```
 
-````css
+```css
 .demo .next-btn {
     margin-right: 5px;
 }
@@ -103,4 +118,4 @@ ReactDOM.render(<App/>, mountNode);
     display: inline-block;
     margin-right: 2px;
 }
-````
+```

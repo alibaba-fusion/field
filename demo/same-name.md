@@ -10,7 +10,7 @@ debug: true
 
 2 Component with same name, while delete one should keep the data.
 
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Input, Button } from '@alifd/next';
@@ -20,43 +20,55 @@ class Demo extends React.Component {
     state = {
         show: true,
         show2: true,
-    }
+    };
     field = new Field(this);
 
     render() {
         return (
             <div>
-                {this.state.show ? <Input.TextArea {...this.field.init('name', {initValue: 'same name'})}  /> : null}
+                {this.state.show ? (
+                    <Input.TextArea
+                        {...this.field.init('name', { initValue: 'same name' })}
+                    />
+                ) : null}
                 <Button
                     onClick={() => this.setState({ show: !this.state.show })}
                     warning
-                    style={{marginLeft: 4}}
+                    style={{ marginLeft: 4 }}
                 >
                     delete
                 </Button>
-                <br/><br/>
-                {this.state.show2 ? <Input {...this.field.init('name', {initValue: 'same name'})}  /> : null}
+                <br />
+                <br />
+                {this.state.show2 ? (
+                    <Input
+                        {...this.field.init('name', { initValue: 'same name' })}
+                    />
+                ) : null}
                 <Button
                     onClick={() => this.setState({ show2: !this.state.show2 })}
                     warning
-                    style={{marginLeft: 4}}
+                    style={{ marginLeft: 4 }}
                 >
                     delete
                 </Button>
 
-                <br/><br/>
+                <br />
+                <br />
                 <Button
                     onClick={() => {
-                        console.log('value always exist', this.field.getValues());
+                        console.log(
+                            'value always exist',
+                            this.field.getValues()
+                        );
                     }}
                 >
                     print
                 </Button>
-
             </div>
         );
     }
 }
 
 ReactDOM.render(<Demo />, mountNode);
-````
+```
