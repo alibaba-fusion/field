@@ -5,26 +5,22 @@ order: 12
 
 `getUseField` requires `useState` and `useMemo` implementation from React or Rax. Extend the `Field` Component and add a `useField` static method.
 
-`
-static useField(...args) {
+`static useField(...args) {
     return this.getUseField(useState)(...args);
-}
-`
+}`
 
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React, { useState, useMemo } from 'react';
 import { Input, Button } from '@alifd/next';
 import Field from '@alifd/field';
 
-
 class myField extends Field {
     static useField(...args) {
-        return this.getUseField({useState, useMemo})(...args);
+        return this.getUseField({ useState, useMemo })(...args);
     }
 }
 
- 
 function NewApp() {
     const field = myField.useField();
 
@@ -40,14 +36,14 @@ function NewApp() {
 
     return (
         <div className="demo">
-            <Input {...init('input', {initValue: 'test'})} />
+            <Input {...init('input', { initValue: 'test' })} />
             <Button onClick={onSetValue}> setValue </Button>
             <Button onClick={onGetValue}> getValue </Button>
-            <br/><br/>
-        </div>);
- }
- 
- 
-ReactDOM.render(<NewApp/>, mountNode);
- 
- ````
+            <br />
+            <br />
+        </div>
+    );
+}
+
+ReactDOM.render(<NewApp />, mountNode);
+```

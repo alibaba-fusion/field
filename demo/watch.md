@@ -9,7 +9,7 @@ order: 13
 
 Use `field.watch` to detect changes of the field value
 
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Button, Input, Switch } from '@alifd/next';
@@ -20,23 +20,26 @@ class App extends React.Component {
         super(props);
         this.field = new Field(this);
         this.state = {
-            showInput: true
+            showInput: true,
         };
-        this.field.watch(['radio', 'input', 'switch'], (name, value, oldValue, triggerType) => {
-            // console.log('[Detect change]', name, value, oldValue, triggerType);
-            console.group('[Detect Change]')
-            console.log('name:', name);
-            console.log('value:', oldValue, ' -> ', value);
-            console.log('triggerType:', triggerType);
-            console.groupEnd('[Detect Change]')
+        this.field.watch(
+            ['radio', 'input', 'switch'],
+            (name, value, oldValue, triggerType) => {
+                // console.log('[Detect change]', name, value, oldValue, triggerType);
+                console.group('[Detect Change]');
+                console.log('name:', name);
+                console.log('value:', oldValue, ' -> ', value);
+                console.log('triggerType:', triggerType);
+                console.groupEnd('[Detect Change]');
 
-            // 监听switch变化，联动控制input显隐
-            if (name === 'switch') {
-                this.setState({
-                    showInput: value
-                });
+                // 监听switch变化，联动控制input显隐
+                if (name === 'switch') {
+                    this.setState({
+                        showInput: value,
+                    });
+                }
             }
-        });
+        );
     }
 
     render() {
@@ -46,12 +49,18 @@ class App extends React.Component {
         return (
             <div className="demo">
                 <Switch
-                    {...init('switch', { valueName: 'checked', initValue: true })}
+                    {...init('switch', {
+                        valueName: 'checked',
+                        initValue: true,
+                    })}
                     style={{ marginTop: 10, marginBottom: 10 }}
                 />
                 <br />
-                {showInput && <Input {...init('input', { initValue: 'input' })} />}
-                <br /><br />
+                {showInput && (
+                    <Input {...init('input', { initValue: 'input' })} />
+                )}
+                <br />
+                <br />
 
                 <Button
                     type="primary"
@@ -84,10 +93,10 @@ class App extends React.Component {
 }
 
 ReactDOM.render(<App />, mountNode);
-````
+```
 
-````css
+```css
 .demo .next-btn {
     margin-right: 5px;
 }
-````
+```

@@ -1,6 +1,4 @@
-demo/**/*
-/index.js
 node_modules
+es
 lib
 build
-

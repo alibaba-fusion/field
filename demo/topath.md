@@ -2,6 +2,7 @@
 title: 结构化解析 - Parse Array or Object
 order: 11
 ---
+
 把 `init('obj.b')` 的数据转换成 `obj={obj:{b:'value'}}`；
 
 把 `init('arr.0')` 的数据转换成 `obj={arr:['']}`；
@@ -12,14 +13,11 @@ from `init('obj.b')` to `obj={obj:{b:'value'}}`；
 
 from `init('arr.0')` to `obj={arr:['']}`；
 
-
-````jsx
+```jsx
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Input, Button } from '@alifd/next';
 import Field from '@alifd/field';
-
-
 
 class App extends React.Component {
     field = new Field(this, {
@@ -27,9 +25,9 @@ class App extends React.Component {
         values: {
             objWithDefaults: {
                 a: 1,
-                b: 2
-            }
-        }
+                b: 2,
+            },
+        },
     });
 
     onGetValue() {
@@ -40,55 +38,56 @@ class App extends React.Component {
         this.field.setValues({
             obj: {
                 b: 'b',
-                c: 'c'
+                c: 'c',
             },
             arr: ['first', 'second'],
             objWithDefaults: {
                 a: 100,
-                b: 200
-            }
+                b: 200,
+            },
         });
     }
 
     render() {
         const { init, reset, resetToDefault } = this.field;
 
-        return (<div className="demo">
-            <h3>Object transfer</h3>
-            obj.b: <Input {...init('obj.b', {initValue: 'test1'})} /> &nbsp;
-            obj.c: <Input {...init('obj.c', {initValue: 'test2'})} />
-
-            <br/>
-
-            <h3>Array transfer</h3>
-            arr.0: <Input {...init('arr.0', {initValue: '0'})} /> &nbsp;
-            arr.1: <Input {...init('arr.1', {initValue: '1'})} />
-            <br/><br/>
-
-            <h3>Object with Defaults</h3>
-            objWithDefaults.a: <Input {...init('objWithDefaults.a')} /> &nbsp;
-            objWithDefaults.b: <Input {...init('objWithDefaults.b')} />
-            <br/><br/>
-
-            result:
-            <pre>{JSON.stringify(this.field.getValues(), null, 2)}</pre>
-
-            <br/><br/>
-
-            <Button type="primary" onClick={this.onGetValue.bind(this)}>getValues</Button>
-            <Button onClick={this.onSetValue.bind(this)}>setValues</Button>
-            <Button onClick={() => reset()}>reset</Button>
-            <Button onClick={() => resetToDefault()}>resetToDefault</Button>
-        </div>);
+        return (
+            <div className="demo">
+                <h3>Object transfer</h3>
+                obj.b: <Input {...init('obj.b', { initValue: 'test1' })} /> &nbsp;
+                obj.c: <Input {...init('obj.c', { initValue: 'test2' })} />
+                <br />
+                <h3>Array transfer</h3>
+                arr.0: <Input {...init('arr.0', { initValue: '0' })} /> &nbsp;
+                arr.1: <Input {...init('arr.1', { initValue: '1' })} />
+                <br />
+                <br />
+                <h3>Object with Defaults</h3>
+                objWithDefaults.a: <Input {...init('objWithDefaults.a')} />{' '}
+                &nbsp; objWithDefaults.b:{' '}
+                <Input {...init('objWithDefaults.b')} />
+                <br />
+                <br />
+                result:
+                <pre>{JSON.stringify(this.field.getValues(), null, 2)}</pre>
+                <br />
+                <br />
+                <Button type="primary" onClick={this.onGetValue.bind(this)}>
+                    getValues
+                </Button>
+                <Button onClick={this.onSetValue.bind(this)}>setValues</Button>
+                <Button onClick={() => reset()}>reset</Button>
+                <Button onClick={() => resetToDefault()}>resetToDefault</Button>
+            </div>
+        );
     }
 }
 
+ReactDOM.render(<App />, mountNode);
+```
 
-ReactDOM.render(<App/>, mountNode);
-````
-
-````css
+```css
 .demo .next-btn {
     margin-right: 5px;
 }
-````
+```

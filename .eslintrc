@@ -3,12 +3,21 @@
         "es6": true,
         "node": true
     },
-    "extends": ["@alifd/eslint-config-next", "prettier"],
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+        "@alifd/eslint-config-next",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ],
+    "plugins": ["@typescript-eslint"],
     "rules": {
         "valid-jsdoc": "off",
         "max-statements": "off",
         "max-len": "off",
-        "no-unused-vars": 1,
-        "import/prefer-default-export": 0
+        "import/prefer-default-export": 0,
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "error"
     }
 }
