@@ -205,7 +205,6 @@ let myfield = new Field(this [,options]);
 | onChange           | 所有组件的 change 都会到达这里[setValue 不会触发该函数]                                                                                 | Function(name,value) |        |
 | parseName          | 是否翻译`init(name)`中的`name`(getValues 会把带`.`的字符串转换成对象)                                                                   | Boolean              | false  |
 | forceUpdate        | 仅建议 PureComponent 的组件打开此强制刷新功能，会带来性能问题(500 个组件为例：打开的时候 render 花费 700ms, 关闭时候 render 花费 400ms) | Boolean              | false  |
-| scrollToFirstError | field.validate 的时候滚动到第一个出错的组件, 如果是整数会进行偏移                                                                       | Boolean/Number       | true   |
 | autoUnmount        | 自动删除 Unmout 元素，如果想保留数据可以设置为 false                                                                                    | Boolean              | true   |
 | autoValidate       | 是否修改数据的时候就自动触发校验, 设为 false 后只能通过 validate() 来触发校验                                                           | Boolean              | true   |
 | values             | 初始化数据                                                                                                                              | Object               |        |
