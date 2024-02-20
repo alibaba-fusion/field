@@ -1,14 +1,14 @@
 {
-  "plugins": [
-    "build-plugin-component",
-    "build-plugin-fusion",
-    [
-      "build-plugin-moment-locales",
-      {
-        "locales": [
-          "zh-cn"
+    "disableGenerateStyle": true,
+    "plugins": [
+        "./build.plugin.js",
+        "build-plugin-component",
+        "build-plugin-fusion",
+        [
+            "build-plugin-moment-locales",
+            {
+                "locales": ["zh-cn"]
+            }
         ]
-      }
     ]
-  ]
 }
