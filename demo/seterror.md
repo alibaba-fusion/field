@@ -21,7 +21,6 @@ class App extends React.Component {
     validate = () => {
         console.log(this.field.getErrors());
         this.field.validateCallback((error, values) => {
-            // eslint-disable-next-line no-alert
             alert(JSON.stringify(error));
         });
     };

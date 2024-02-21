@@ -1,5 +1,5 @@
-import React, { isValidElement, cloneElement } from 'react';
-import assert from 'power-assert';
+import React, { isValidElement, cloneElement, ReactElement } from 'react';
+import { assert } from 'chai';
 import {
     getErrorStrs,
     hasIn,
@@ -11,11 +11,7 @@ import {
     isOverwritten,
 } from '../src/utils';
 
-/* eslint-disable react/jsx-filename-extension */
-
-/* global describe it */
-
-function processErrorMessage(element) {
+function processErrorMessage(element: ReactElement) {
     if (element && isValidElement(element)) {
         return cloneElement(element, { key: 'error' });
     }
@@ -208,8 +204,9 @@ describe('Field Utils', () => {
         });
 
         it('should delete array element, but not change later indices', () => {
-            // eslint-disable-next-line no-sparse-arrays
-            assert.deepEqual(deleteIn({ a: { b: [1, 2, 3] } }, 'a.b.0'), { a: { b: [, 2, 3] } });
+            assert.deepEqual(deleteIn({ a: { b: [1, 2, 3] } }, 'a.b.0'), {
+                a: { b: [undefined, 2, 3] },
+            });
         });
     });
 
@@ -226,7 +223,7 @@ describe('Field Utils', () => {
         });
 
         it('should return cloned rule array', () => {
-            const rule = { required: true };
+            const rule: Record<string, unknown> = { required: true };
             const cloned = cloneToRuleArr(rule);
             cloned[0].validate = () => {};
             assert(!('validate' in rule));

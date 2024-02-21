@@ -65,11 +65,8 @@ class Custom extends React.Component {
     }
 }
 
-/* eslint-disable react/no-multi-comp */
 class App extends React.Component {
-    field = new Field(this, {
-        deepReset: true,
-    });
+    field = new Field(this);
 
     onGetValue() {
         console.log(this.field.getValue('custom'));

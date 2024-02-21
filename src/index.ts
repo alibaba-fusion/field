@@ -1,4 +1,6 @@
+import { Component, MutableRefObject } from 'react';
 import Validate from '@alifd/validate';
+import { NormalizedValidateError } from '@alifd/validate/lib/types';
 import {
     getValueFromEvent,
     getErrorStrs,
@@ -12,21 +14,43 @@ import {
     cloneToRuleArr,
     isOverwritten,
 } from './utils';
+import {
+    FieldOption,
+    ComponentInstance,
+    GetUseFieldOption,
+    FieldMeta,
+    RerenderFunction,
+    WatchCallback,
+    NormalizedFieldOption,
+    InitOption,
+    FieldValues,
+    NormalizedFieldMeta,
+    Rule,
+    FieldState,
+    ValidateCallback,
+    ValidateResultFormatter,
+    ValidateErrorGroup,
+    RerenderType,
+    WatchTriggerType,
+    SetState,
+    ValidatePromiseResults,
+    InitResult,
+} from './types';
 
 const initMeta = {
-    state: '',
+    state: '' as const,
     valueName: 'value',
     trigger: 'onChange',
     inputValues: [],
 };
 
 class Field {
-    static create(com, options = {}) {
+    static create(com: ComponentInstance, options: FieldOption = {}) {
         return new this(com, options);
     }
 
-    static getUseField({ useState, useMemo }) {
-        return (options = {}) => {
+    static getUseField({ useState, useMemo }: GetUseFieldOption) {
+        return (options: FieldOption = {}) => {
             const [, setState] = useState();
 
             const field = useMemo(() => this.create({ setState }, options), [setState]);
@@ -35,7 +59,19 @@ class Field {
         };
     }
 
-    constructor(com, options = {}) {
+    private com: ComponentInstance;
+    private fieldsMeta: Record<string, FieldMeta>;
+    private cachedBind: Record<string, Record<string, unknown>>;
+    private instance: Record<string, unknown>;
+    private instanceCount: Record<string, number>;
+    private reRenders: Record<string, RerenderFunction>;
+    private listeners: Record<string, Set<WatchCallback>>;
+    private values: FieldValues;
+    private processErrorMessage?: FieldOption['processErrorMessage'];
+    private afterValidateRerender?: FieldOption['afterValidateRerender'];
+    options: NormalizedFieldOption;
+
+    constructor(com: ComponentInstance, options: FieldOption = {}) {
         if (!com) {
             warning('`this` is missing in `Field`, you should use like `new Field(this)`');
         }
@@ -58,7 +94,6 @@ class Field {
             {
                 parseName: false,
                 forceUpdate: false,
-                scrollToFirstError: true,
                 first: false,
                 onChange: () => {},
                 autoUnmount: true,
@@ -67,42 +102,67 @@ class Field {
             options
         );
 
-        [
-            'init',
-            'getValue',
-            'getValues',
-            'setValue',
-            'setValues',
-            'getError',
-            'getErrors',
-            'setError',
-            'setErrors',
-            'validateCallback',
-            'validatePromise',
-            'getState',
-            'reset',
-            'resetToDefault',
-            'remove',
-            'spliceArray',
-            'addArrayValue',
-            'deleteArrayValue',
-            'getNames',
-        ].forEach(m => {
+        (
+            [
+                'init',
+                'getValue',
+                'getValues',
+                'setValue',
+                'setValues',
+                'getError',
+                'getErrors',
+                'setError',
+                'setErrors',
+                'validateCallback',
+                'validatePromise',
+                'getState',
+                'reset',
+                'resetToDefault',
+                'remove',
+                'spliceArray',
+                'addArrayValue',
+                'deleteArrayValue',
+                'getNames',
+            ] as const
+        ).forEach((m) => {
             this[m] = this[m].bind(this);
         });
     }
 
-    setOptions(options) {
+    /**
+     * 设置配置信息
+     * @param options - 配置
+     */
+    setOptions(options: Partial<FieldOption>) {
         Object.assign(this.options, options);
     }
 
+    init<ValueType = any, OtherProps extends object = object>(
+        name: string,
+        option?: InitOption<ValueType, never, never, OtherProps>,
+        rprops?: OtherProps
+    ): Omit<OtherProps, keyof InitResult<'value', 'onChange', ValueType>> & InitResult<'value', 'onChange', ValueType>;
+    init<
+        ValueType = any,
+        ValueName extends string = 'value',
+        Trigger extends string = 'onChange',
+        OtherProps extends object = object,
+    >(
+        name: string,
+        option?: InitOption<ValueType, ValueName, Trigger, OtherProps>,
+        rprops?: OtherProps
+    ): Omit<OtherProps, keyof InitResult<ValueName, Trigger, ValueType>> & InitResult<ValueName, Trigger, ValueType>;
     /**
-     * Controlled Component
-     * @param {String} name
-     * @param {Object} fieldOption
-     * @returns {Object} {value, onChange}
+     * 初始化一个字段项
+     * @param name - 字段 key
+     * @param option - 字段配置
+     * @param rprops - 其它参数
      */
-    init(name, fieldOption = {}, rprops) {
+    init<ValueType, ValueName extends string, Trigger extends string, OtherProps extends object>(
+        name: string,
+        option: InitOption<ValueType, ValueName, Trigger, OtherProps> = {},
+        rprops?: OtherProps
+    ) {
         const {
             id,
             initValue,
@@ -115,14 +175,14 @@ class Field {
             setValueFormatter,
             autoValidate = true,
             reRender,
-        } = fieldOption;
+        } = option;
         const { parseName } = this.options;
 
         if (getValueFromEvent) {
             warning('`getValueFromEvent` has been deprecated in `Field`, use `getValueFormatter` instead of it');
         }
 
-        const originalProps = Object.assign({}, props, rprops);
+        const originalProps = Object.assign({}, props, rprops) as Record<string, unknown>;
         const defaultValueName = `default${valueName[0].toUpperCase()}${valueName.slice(1)}`;
         let defaultValue;
         if (typeof initValue !== 'undefined') {
@@ -133,7 +193,7 @@ class Field {
         }
 
         // get field from this.fieldsMeta or new one
-        const field = this._getInitMeta(name);
+        const field = this._getInitMeta(name) as NormalizedFieldMeta;
         Object.assign(field, {
             valueName,
             initValue: defaultValue,
@@ -198,10 +258,12 @@ class Field {
             'data-meta': 'Field',
             id: id || name,
             ref: this._getCacheBind(name, `${name}__ref`, this._saveRef),
-            [valueName]: setValueFormatter ? setValueFormatter(field.value, field.inputValues) : field.value,
+            [valueName]: setValueFormatter
+                ? setValueFormatter(field.value as any, field.inputValues)
+                : (field.value as any),
         };
 
-        let rulesMap = {};
+        let rulesMap: Record<string, Omit<Rule, 'trigger'>[]> = {};
 
         if (this.options.autoValidate && autoValidate !== false) {
             // trigger map in rules,
@@ -215,7 +277,7 @@ class Field {
                 }
 
                 const actionRule = rulesMap[action];
-                inputProps[action] = (...args) => {
+                inputProps[action] = (...args: unknown[]) => {
                     this._callNativePropsEvent(action, originalProps, ...args);
                     this._validate(name, actionRule, action);
                 };
@@ -223,7 +285,7 @@ class Field {
         }
 
         // step2: onChange(trigger=onChange by default) hack
-        inputProps[trigger] = (...args) => {
+        inputProps[trigger] = (...args: unknown[]) => {
             const oldValue = this.getValue(name);
             this._updateFieldValue(name, ...args);
             const newValue = this.getValue(name);
@@ -250,18 +312,20 @@ class Field {
 
         delete originalProps[defaultValueName];
 
-        return Object.assign({}, originalProps, inputProps);
+        return Object.assign({}, originalProps, inputProps) as OtherProps & InitResult<ValueName, Trigger, ValueType>;
     }
 
     /**
      * call native event from props.onXx
      * eg: props.onChange props.onBlur props.onFocus
      */
-    _callNativePropsEvent(action, props, ...args) {
-        action in props && typeof props[action] === 'function' && props[action](...args);
+    private _callNativePropsEvent(action: string, props: Record<string, unknown>, ...args: unknown[]) {
+        action in props &&
+            typeof props[action] === 'function' &&
+            (props[action] as (...args: unknown[]) => unknown)(...args);
     }
 
-    _getInitMeta(name) {
+    private _getInitMeta(name: string) {
         if (!(name in this.fieldsMeta)) {
             this.fieldsMeta[name] = Object.assign({ name }, initMeta);
         }
@@ -269,7 +333,7 @@ class Field {
         return this.fieldsMeta[name];
     }
 
-    _proxyFieldValue(field) {
+    private _proxyFieldValue(field: NormalizedFieldMeta) {
         const _this = this;
         Object.defineProperty(field, 'value', {
             configurable: true,
@@ -278,7 +342,7 @@ class Field {
                 return getIn(_this.values, this.name);
             },
             set(v) {
-                // 此处this解释同上
+                // 此处 this 解释同上
                 _this.values = setIn(_this.values, this.name, v);
                 return true;
             },
@@ -288,14 +352,13 @@ class Field {
     /**
      * update field.value and validate
      */
-    _updateFieldValue(name, ...others) {
+    private _updateFieldValue(name: string, ...others: unknown[]) {
         const e = others[0];
         const field = this._get(name);
 
         if (!field) {
             return;
         }
-
         field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
         field.inputValues = others;
 
@@ -308,34 +371,30 @@ class Field {
 
     /**
      * ref must always be the same function, or if not it will be triggerd every time.
-     * @param {String} name name of component
-     * @param {String} action key to find ref
-     * @param {Function} fn saveRef
      */
-    _getCacheBind(name, action, fn) {
+    private _getCacheBind<Args extends unknown[], Result>(
+        name: string,
+        action: string,
+        fn: (name: string, ...args: Args) => Result
+    ): (...args: Args) => Result {
         const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
         if (!cache[action]) {
             cache[action] = fn.bind(this, name);
         }
-        return cache[action];
+        return cache[action] as (...args: Args) => Result;
     }
 
-    _setCache(name, action, hander) {
+    private _setCache(name: string, action: string, hander: unknown) {
         const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
         cache[action] = hander;
     }
 
-    _getCache(name, action) {
+    private _getCache<R = unknown>(name: string, action: string): R | undefined {
         const cache = this.cachedBind[name] || {};
-        return cache[action];
+        return cache[action] as R | undefined;
     }
 
-    /**
-     * NOTE: saveRef is async function. it will be called after render
-     * @param {String} name name of component
-     * @param {Function} component ref
-     */
-    _saveRef(name, component) {
+    private _saveRef(name: string, component: unknown) {
         const key = `${name}_field`;
         const autoUnmount = this.options.autoUnmount;
 
@@ -353,7 +412,7 @@ class Field {
             const cache = this.fieldsMeta[name];
             if (cache) {
                 if (this.options.parseName) {
-                    // 若parseName模式下，因为value为getter、setter，所以将当前值记录到_value内
+                    // 若 parseName 模式下，因为 value 为 getter、setter，所以将当前值记录到_value 内
                     cache._value = cache.value;
                 }
                 this._setCache(name, key, cache);
@@ -371,9 +430,9 @@ class Field {
 
         // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
         if (autoUnmount && !this.fieldsMeta[name] && this._getCache(name, key)) {
-            const cache = this._getCache(name, key);
+            const cache = this._getCache<NormalizedFieldMeta>(name, key)!;
             this.fieldsMeta[name] = cache;
-            // 若parseName模式，则使用_value作为值设置到values内
+            // 若 parseName 模式，则使用_value 作为值设置到 values 内
             this.setValue(name, this.options.parseName ? cache._value : cache.value, false, false);
             this.options.parseName && '_value' in cache && delete cache._value;
         }
@@ -386,7 +445,7 @@ class Field {
             if (!component && !autoUnmount) {
                 field.state = '';
                 delete field.errors;
-                delete field.rules;
+                delete (field as FieldMeta).rules;
                 delete field.rulesMap;
             }
             const ref = field.ref;
@@ -397,7 +456,7 @@ class Field {
                     ref(component);
                 } else if (typeof ref === 'object' && 'current' in ref) {
                     // while ref = React.createRef() ref={ current: null}
-                    ref.current = component;
+                    (ref as MutableRefObject<unknown>).current = component;
                 }
             }
 
@@ -415,13 +474,7 @@ class Field {
         }
     }
 
-    /**
-     * validate one Component
-     * @param {String} name name of Component
-     * @param {Array} rule
-     * @param {String} trigger onChange/onBlur/onItemClick/...
-     */
-    _validate(name, rule, trigger) {
+    private _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
         const field = this._get(name);
         if (!field) {
             return;
@@ -430,7 +483,7 @@ class Field {
         const value = field.value;
 
         field.state = 'loading';
-        let validate = this._getCache(name, trigger);
+        let validate = this._getCache<Validate>(name, trigger);
 
         if (validate && typeof validate.abort === 'function') {
             validate.abort();
@@ -443,8 +496,8 @@ class Field {
             {
                 [name]: value,
             },
-            errors => {
-                let newErrors, newState;
+            (errors) => {
+                let newErrors: string[], newState: FieldState;
                 if (errors && errors.length) {
                     newErrors = getErrorStrs(errors, this.processErrorMessage);
                     newState = 'error';
@@ -459,7 +512,7 @@ class Field {
                     newState !== field.state ||
                     !field.errors ||
                     newErrors.length !== field.errors.length ||
-                    newErrors.find((e, idx) => e !== field.errors[idx])
+                    newErrors.find((e, idx) => e !== field.errors![idx])
                 ) {
                     reRender = true;
                 }
@@ -472,33 +525,45 @@ class Field {
         );
     }
 
-    getValue(name) {
+    /**
+     * 获取单个输入控件的值
+     * @param name - 字段名
+     * @returns 字段值
+     */
+    getValue<T = unknown>(name: string): T | undefined {
         if (this.options.parseName) {
             return getIn(this.values, name);
         }
-        return this.values[name];
+        return this.values[name] as T;
     }
 
     /**
-     * 1. get values by names.
-     * 2. If no names passed, return shallow copy of `field.values`
-     * @param {Array} names
+     * 获取一组输入控件的值
+     * @param names - 字段名数组
+     * @returns 不传入`names`参数，则获取全部字段的值
      */
-    getValues(names) {
-        const allValues = {};
+    getValues<T = Record<string, unknown>>(names?: string[]): T {
+        const allValues: Record<string, unknown> = {};
 
         if (names && names.length) {
-            names.forEach(name => {
+            names.forEach((name) => {
                 allValues[name] = this.getValue(name);
             });
         } else {
             Object.assign(allValues, this.values);
         }
 
-        return allValues;
+        return allValues as T;
     }
 
-    setValue(name, value, reRender = true, triggerChange = true) {
+    /**
+     * 设置单个输入控件的值（默认会触发 render，请遵循 react 时机使用)
+     * @param name - 字段名
+     * @param value - 字段值
+     * @param reRender - 设置完成后是否重新渲染，默认为 true
+     * @param triggerChange - 是否触发 watch change，默认为 true
+     */
+    setValue(name: string, value: unknown, reRender = true, triggerChange = true) {
         const oldValue = this.getValue(name);
         if (name in this.fieldsMeta) {
             this.fieldsMeta[name].value = value;
@@ -515,9 +580,14 @@ class Field {
         reRender && this._reRender(name, 'setValue');
     }
 
-    setValues(fieldsValue = {}, reRender = true) {
+    /**
+     * 设置一组输入控件的值（默认会触发 render，请遵循 react 时机使用)
+     * @param fieldsValue - 一组输入控件值对象
+     * @param reRender - 设置完成后是否重新渲染，默认为 true
+     */
+    setValues(fieldsValue: Record<string, unknown> = {}, reRender = true) {
         if (!this.options.parseName) {
-            Object.keys(fieldsValue).forEach(name => {
+            Object.keys(fieldsValue).forEach((name) => {
                 this.setValue(name, fieldsValue[name], false, true);
             });
         } else {
@@ -530,8 +600,8 @@ class Field {
             const allOldFieldValues = this.getValues(fields);
             // record all old field values, exclude items overwritten by fieldsValue
             const oldFieldValues = fields
-                .filter(name => !isOverwritten(fieldsValue, name))
-                .map(name => ({ name, value: this.fieldsMeta[name].value }));
+                .filter((name) => !isOverwritten(fieldsValue, name))
+                .map((name) => ({ name, value: this.fieldsMeta[name].value }));
             // assign lost field value to newValues
             oldFieldValues.forEach(({ name, value }) => {
                 if (!hasIn(newValues, name)) {
@@ -549,8 +619,13 @@ class Field {
         reRender && this._reRender();
     }
 
-    setError(name, errors) {
-        const err = Array.isArray(errors) ? errors : errors ? [errors] : [];
+    /**
+     * 设置单个输入控件的 Error
+     * @param name - 字段名
+     * @param errors - 错误信息
+     */
+    setError(name: string, errors?: unknown) {
+        const err: unknown[] = Array.isArray(errors) ? errors : errors ? [errors] : [];
         if (name in this.fieldsMeta) {
             this.fieldsMeta[name].errors = err;
         } else {
@@ -559,7 +634,7 @@ class Field {
             };
         }
 
-        if (this.fieldsMeta[name].errors && this.fieldsMeta[name].errors.length > 0) {
+        if (this.fieldsMeta[name].errors && this.fieldsMeta[name].errors!.length > 0) {
             this.fieldsMeta[name].state = 'error';
         } else {
             this.fieldsMeta[name].state = '';
@@ -568,13 +643,21 @@ class Field {
         this._reRender(name, 'setError');
     }
 
-    setErrors(fieldsErrors = {}) {
-        Object.keys(fieldsErrors).forEach(name => {
+    /**
+     * 设置一组输入控件的 Error
+     */
+    setErrors(fieldsErrors: Record<string, unknown> = {}) {
+        Object.keys(fieldsErrors).forEach((name) => {
             this.setError(name, fieldsErrors[name]);
         });
     }
 
-    getError(name) {
+    /**
+     * 获取单个输入控件的 Error
+     * @param name - 字段名
+     * @returns 该字段的 Error
+     */
+    getError(name: string) {
         const field = this._get(name);
         if (field && field.errors && field.errors.length) {
             return field.errors;
@@ -583,16 +666,25 @@ class Field {
         return null;
     }
 
-    getErrors(names) {
+    /**
+     * 获取一组输入控件的 Error
+     * @param names - 字段名列表
+     * @returns 不传入`names`参数，则获取全部字段的 Error
+     */
+    getErrors<K extends string>(names?: K[]) {
         const fields = names || this.getNames();
-        const allErrors = {};
-        fields.forEach(f => {
+        const allErrors = {} as Record<K, unknown[] | null>;
+        fields.forEach((f: K) => {
             allErrors[f] = this.getError(f);
         });
         return allErrors;
     }
 
-    getState(name) {
+    /**
+     * 获取单个字段的校验状态
+     * @param name - 字段名
+     */
+    getState(name: string): FieldState {
         const field = this._get(name);
 
         if (field && field.state) {
@@ -604,15 +696,13 @@ class Field {
 
     /**
      * Get errors using `getErrors` and format to match the structure of errors returned in field.validate
-     * @param {Array} fieldNames
-     * @return {Object || null} map of inputs and their errors
      */
-    formatGetErrors(fieldNames) {
-        const errors = this.getErrors(fieldNames);
-        let formattedErrors = null;
+    private formatGetErrors(names?: string[]) {
+        const errors = this.getErrors(names);
+        let formattedErrors: ValidateErrorGroup | null = null;
         for (const field in errors) {
             if (errors.hasOwnProperty(field) && errors[field]) {
-                const errorsObj = errors[field];
+                const errorsObj = errors[field]!;
                 if (!formattedErrors) {
                     formattedErrors = {};
                 }
@@ -623,21 +713,30 @@ class Field {
     }
 
     /**
-     * validate by trigger
-     * @param {Array} ns names
-     * @param {Function} cb callback after validate
+     * 校验全部字段
+     * @param callback - 校验结果的回调函数
      */
-    validateCallback(ns, cb) {
+    validateCallback(callback?: ValidateCallback): void;
+    /**
+     * 校验指定字段
+     * @param names - 字段名或字段名列表
+     * @param callback - 校验结果回调函数
+     */
+    validateCallback(names?: string | string[], callback?: ValidateCallback): void;
+    /**
+     * 校验 - Callback version
+     */
+    validateCallback(ns?: string | string[] | ValidateCallback, cb?: ValidateCallback) {
         const { names, callback } = getParams(ns, cb);
         const fieldNames = names || this.getNames();
 
-        const descriptor = {};
-        const values = {};
+        const descriptor: Record<string, Rule[]> = {};
+        const values: FieldValues = {};
 
         let hasRule = false;
         for (let i = 0; i < fieldNames.length; i++) {
             const name = fieldNames[i];
-            const field = this._get(name);
+            const field = this._get(name) as NormalizedFieldMeta;
 
             if (!field) {
                 continue;
@@ -665,27 +764,27 @@ class Field {
             messages: this.options.messages,
         });
 
-        validate.validate(values, errors => {
-            let errorsGroup = null;
+        validate.validate(values, (errors) => {
+            let errorsGroup: ValidateErrorGroup | null = null;
             if (errors && errors.length) {
                 errorsGroup = {};
-                errors.forEach(e => {
+                errors.forEach((e) => {
                     const fieldName = e.field;
-                    if (!errorsGroup[fieldName]) {
-                        errorsGroup[fieldName] = {
+                    if (!errorsGroup![fieldName]) {
+                        errorsGroup![fieldName] = {
                             errors: [],
                         };
                     }
-                    const fieldErrors = errorsGroup[fieldName].errors;
+                    const fieldErrors = errorsGroup![fieldName].errors;
                     fieldErrors.push(e.message);
                 });
             }
             if (errorsGroup) {
                 // update error in every Field
-                Object.keys(errorsGroup).forEach(i => {
+                Object.keys(errorsGroup).forEach((i) => {
                     const field = this._get(i);
                     if (field) {
-                        field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
+                        field.errors = getErrorStrs(errorsGroup![i].errors, this.processErrorMessage);
                         field.state = 'error';
                     }
                 });
@@ -706,42 +805,55 @@ class Field {
                 }
             }
 
-            // eslint-disable-next-line callback-return
             callback && callback(errorsGroup, this.getValues(names ? fieldNames : []));
             this._reRender(names, 'validate');
 
-            if (typeof this.afterValidateRerender === 'function') {
-                this.afterValidateRerender({
-                    errorsGroup,
-                    options: this.options,
-                    instance: this.instance,
-                });
-            }
+            this._triggerAfterValidateRerender(errorsGroup);
         });
     }
 
     /**
-     * validate by trigger - Promise version
-     * NOTES:
-     * - `afterValidateRerender` is not called in `validatePromise`. The rerender is called just before this function
-     *      returns a promise, so use the returned promise to call any after rerender logic.
-     *
-     * @param {Array} ns names
-     * @param {Function} cb (Optional) callback after validate, must return a promise or a value
-     *                  - ({errors, values}) => Promise({errors, values}) | {errors, values}
-     * @returns {Promise} - resolves with {errors, values}
+     * Promise 方式校验全部字段
      */
-    async validatePromise(ns, cb) {
-        const { names, callback } = getParams(ns, cb);
+    async validatePromise(): Promise<ValidatePromiseResults>;
+    /**
+     * Promise 方式校验指定字段
+     * @param names - 字段名或字段名列表
+     */
+    async validatePromise(names?: string | string[]): Promise<ValidatePromiseResults>;
+    /**
+     * Promise 方式校验所有字段，并使用一个函数处理校验结果
+     * @param formatter - 校验结果处理函数
+     */
+    async validatePromise<FormatterResults>(
+        formatter?: (results: ValidatePromiseResults) => FormatterResults | Promise<FormatterResults>
+    ): Promise<FormatterResults>;
+    /**
+     * Promise 方式校验指定字段，并使用一个函数处理校验结果
+     * @param names - 字段名或字段名列表
+     * @param formatter - 校验结果处理函数
+     */
+    async validatePromise<FormatterResults>(
+        names?: string | string[],
+        formatter?: (results: ValidatePromiseResults) => FormatterResults | Promise<FormatterResults>
+    ): Promise<typeof formatter extends undefined ? ValidatePromiseResults : FormatterResults>;
+    /**
+     * 校验 - Promise version
+     */
+    async validatePromise<FormatterResults>(
+        ns?: string | string[] | ValidateResultFormatter<FormatterResults>,
+        formatter?: ValidateResultFormatter<FormatterResults>
+    ) {
+        const { names, callback } = getParams(ns, formatter);
         const fieldNames = names || this.getNames();
 
-        const descriptor = {};
-        const values = {};
+        const descriptor: Record<string, Rule[]> = {};
+        const values: FieldValues = {};
 
         let hasRule = false;
         for (let i = 0; i < fieldNames.length; i++) {
             const name = fieldNames[i];
-            const field = this._get(name);
+            const field = this._get(name) as NormalizedFieldMeta;
 
             if (!field) {
                 continue;
@@ -783,7 +895,7 @@ class Field {
 
         const errorsGroup = this._getErrorsGroup({ errors, fieldNames });
 
-        let callbackResults = {
+        let callbackResults: ValidatePromiseResults | FormatterResults = {
             errors: errorsGroup,
             values: this.getValues(names ? fieldNames : []),
         };
@@ -795,31 +907,32 @@ class Field {
             return error;
         }
         this._reRender(names, 'validate');
-
+        // afterValidateRerender 作为通用属性，在 callback 和 promise 两个版本的 validate 中保持相同行为
+        this._triggerAfterValidateRerender(errorsGroup);
         return callbackResults;
     }
 
-    _getErrorsGroup({ errors, fieldNames }) {
-        let errorsGroup = null;
+    private _getErrorsGroup({ errors, fieldNames }: { errors: NormalizedValidateError[]; fieldNames: string[] }) {
+        let errorsGroup: ValidateErrorGroup | null = null;
         if (errors && errors.length) {
             errorsGroup = {};
-            errors.forEach(e => {
+            errors.forEach((e) => {
                 const fieldName = e.field;
-                if (!errorsGroup[fieldName]) {
-                    errorsGroup[fieldName] = {
+                if (!errorsGroup![fieldName]) {
+                    errorsGroup![fieldName] = {
                         errors: [],
                     };
                 }
-                const fieldErrors = errorsGroup[fieldName].errors;
+                const fieldErrors = errorsGroup![fieldName].errors;
                 fieldErrors.push(e.message);
             });
         }
         if (errorsGroup) {
             // update error in every Field
-            Object.keys(errorsGroup).forEach(i => {
+            Object.keys(errorsGroup).forEach((i) => {
                 const field = this._get(i);
                 if (field) {
-                    field.errors = getErrorStrs(errorsGroup[i].errors, this.processErrorMessage);
+                    field.errors = getErrorStrs(errorsGroup![i].errors, this.processErrorMessage);
                     field.state = 'error';
                 }
             });
@@ -843,7 +956,7 @@ class Field {
         return errorsGroup;
     }
 
-    _reset(ns, backToDefault) {
+    private _reset(ns?: string | string[], backToDefault?: boolean) {
         if (typeof ns === 'string') {
             ns = [ns];
         }
@@ -855,7 +968,7 @@ class Field {
         if (!ns) {
             this.values = {};
         }
-        names.forEach(name => {
+        names.forEach((name) => {
             const field = this._get(name);
             if (field) {
                 changed = true;
@@ -881,14 +994,25 @@ class Field {
         }
     }
 
-    reset(ns) {
+    /**
+     * 重置一组输入控件的值，并清空校验信息
+     * @param names - 要重置的字段名，不传递则重置全部字段
+     */
+    reset(ns?: string | string[]) {
         this._reset(ns, false);
     }
 
-    resetToDefault(ns) {
+    /**
+     * 重置一组输入控件的值为默认值，并清空校验信息
+     * @param names - 要重置的字段名，不传递则重置全部字段
+     */
+    resetToDefault(ns?: string | string[]) {
         this._reset(ns, true);
     }
 
+    /**
+     * 获取所有字段名列表
+     */
     getNames() {
         const fieldsMeta = this.fieldsMeta;
         return Object.keys(fieldsMeta).filter(() => {
@@ -896,7 +1020,11 @@ class Field {
         });
     }
 
-    remove(ns) {
+    /**
+     * 删除某一个或者一组控件的数据，删除后与之相关的 validate/value 都会被清空
+     * @param name - 要删除的字段名，不传递则删除全部字段
+     */
+    remove(ns?: string | string[]) {
         if (typeof ns === 'string') {
             ns = [ns];
         }
@@ -905,7 +1033,7 @@ class Field {
         }
 
         const names = ns || Object.keys(this.fieldsMeta);
-        names.forEach(name => {
+        names.forEach((name) => {
             if (name in this.fieldsMeta) {
                 delete this.fieldsMeta[name];
             }
@@ -917,23 +1045,30 @@ class Field {
         });
     }
 
-    addArrayValue(key, index, ...argv) {
-        return this._spliceArrayValue(key, index, 0, ...argv);
+    /**
+     * 向指定数组字段内添加数据
+     * @param name - 字段名
+     * @param index - 开始添加的索引
+     * @param argv - 新增的数据
+     */
+    addArrayValue(name: string, index: number, ...argv: unknown[]) {
+        return this._spliceArrayValue(name, index, 0, ...argv);
     }
 
-    deleteArrayValue(key, index, howmany = 1) {
-        return this._spliceArrayValue(key, index, howmany);
+    /**
+     * 删除指定字段数组内的数据
+     * @param name - 变量名
+     * @param index - 开始删除的索引
+     * @param howmany - 删除几个数据，默认为 1
+     */
+    deleteArrayValue(name: string, index: number, howmany = 1) {
+        return this._spliceArrayValue(name, index, howmany);
     }
 
     /**
      * splice array
-     * @param {String} key
-     * @param {Number} startIndex
-     * @param {Number} howmany
-     * @param {Array} argv
-     * @param {*} value
      */
-    _spliceArrayValue(key, index, howmany, ...argv) {
+    private _spliceArrayValue(key: string, index: number, howmany: number, ...argv: unknown[]) {
         const argc = argv.length;
         const offset = howmany - argc; // how the reset fieldMeta move
         const startIndex = index + howmany; // 计算起点
@@ -947,23 +1082,23 @@ class Field {
          *   case 1: names=['key.0']; add 'key.1' = item;
          *   case 2: names=['key.0', 'key.1']; key.2= key.1; delete key.1; add key.1 = item;
          */
-        const listMap = {}; // eg: {1:[{from: 'key.2.name', to: 'key.1.name'}, {from: 'key.2.email', to: 'key.1.email'}]}
+        const listMap: Record<string, Array<{ from: string; to: string }>> = {}; // eg: {1:[{from: 'key.2.name', to: 'key.1.name'}, {from: 'key.2.email', to: 'key.1.email'}]}
         const replacedReg = /\$/g;
         // 替换特殊字符$
         const replacedKey = key.replace(replacedReg, '\\$&');
         const keyReg = new RegExp(`^(${replacedKey}.)(\\d+)`);
-        const replaceArgv = [];
+        const replaceArgv: string[] = [];
         const names = this.getNames();
-        const willChangeNames = [];
+        const willChangeNames: string[] = [];
 
         // logic of offset fix begin
-        names.forEach(n => {
+        names.forEach((n) => {
             const ret = keyReg.exec(n);
             if (ret) {
                 const idx = parseInt(ret[2]); // get index of 'key.0.name'
 
                 if (idx >= startIndex) {
-                    let l = listMap[idx];
+                    const l = listMap[idx];
                     const item = {
                         from: n,
                         to: n.replace(keyReg, (match, p1) => `${p1}${idx - offset}`),
@@ -990,7 +1125,7 @@ class Field {
 
         // sort with index eg: [{index:1, list: [{from: 'key.2.name', to: 'key.1.name'}]}, {index:2, list: [...]}]
         const offsetList = Object.keys(listMap)
-            .map(i => {
+            .map((i) => {
                 return {
                     index: Number(i),
                     list: listMap[i],
@@ -998,11 +1133,11 @@ class Field {
             })
             .sort((a, b) => (offset > 0 ? a.index - b.index : b.index - a.index));
 
-        offsetList.forEach(l => {
+        offsetList.forEach((l) => {
             const list = l.list;
-            list.forEach(i => {
+            list.forEach((i) => {
                 this.fieldsMeta[i.to] = this.fieldsMeta[i.from];
-                // 移位后，同步调整name
+                // 移位后，同步调整 name
                 this.fieldsMeta[i.to].name = i.to;
             });
         });
@@ -1010,19 +1145,19 @@ class Field {
         // delete copy data
         if (offsetList.length > 0) {
             const removeList = offsetList.slice(offsetList.length - (offset < 0 ? -offset : offset), offsetList.length);
-            removeList.forEach(item => {
-                item.list.forEach(i => {
+            removeList.forEach((item) => {
+                item.list.forEach((i) => {
                     delete this.fieldsMeta[i.from];
                 });
             });
         } else {
             // will get from this.values while rerender
-            replaceArgv.forEach(i => {
+            replaceArgv.forEach((i) => {
                 delete this.fieldsMeta[i];
             });
         }
 
-        const p = this.getValue(key);
+        const p = this.getValue(key) as unknown[];
         if (p) {
             p.splice(index, howmany, ...argv);
         }
@@ -1036,10 +1171,12 @@ class Field {
 
     /**
      * splice in a Array [deprecated]
-     * @param {String} keyMatch like name.{index}
-     * @param {Number} startIndex index
+     * @deprecated Use `addArrayValue` or `deleteArrayValue` instead
+     * @param keyMatch - like name.\{index\}
+     * @param startIndex - index
      */
-    spliceArray(keyMatch, startIndex, howmany) {
+    spliceArray(keyMatch: string, startIndex: number) {
+        // @ts-expect-error FIXME 无效的 if 逻辑，恒定为 false
         if (keyMatch.match(/{index}$/) === -1) {
             warning('key should match /{index}$/');
             return;
@@ -1049,25 +1186,25 @@ class Field {
         const reg = keyMatch.replace('{index}', '(\\d+)');
         const keyReg = new RegExp(`^${reg}`);
 
-        const listMap = {};
+        const listMap: Record<string, Array<{ from: string; to: string }>> = {};
         /**
-         * keyMatch='key.{index}'
+         * keyMatch='key.\{index\}'
          * case 1: names=['key.0', 'key.1'], should delete 'key.1'
          * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
          */
         const names = this.getNames();
-        const willChangeNames = [];
-        names.forEach(n => {
+        const willChangeNames: string[] = [];
+        names.forEach((n) => {
             // is name in the target array?
             const ret = keyReg.exec(n);
             if (ret) {
                 const index = parseInt(ret[1]);
 
                 if (index > startIndex) {
-                    let l = listMap[index];
+                    const l = listMap[index];
                     const item = {
                         from: n,
-                        to: `${keyMatch.replace('{index}', index - 1)}${n.replace(ret[0], '')}`,
+                        to: `${keyMatch.replace('{index}', (index - 1).toString())}${n.replace(ret[0], '')}`,
                     };
                     willChangeNames.push(item.from);
                     if (names.includes(item.to)) {
@@ -1084,32 +1221,33 @@ class Field {
         const oldValues = this.getValues(willChangeNames);
 
         const idxList = Object.keys(listMap)
-            .map(i => {
+            .map((i) => {
                 return {
                     index: Number(i),
                     list: listMap[i],
                 };
             })
+            // @ts-expect-error FIXME 返回 boolean 值并不能正确排序
             .sort((a, b) => a.index < b.index);
 
         // should be continuous array
         if (idxList.length > 0 && idxList[0].index === startIndex + 1) {
-            idxList.forEach(l => {
+            idxList.forEach((l) => {
                 const list = l.list;
-                list.forEach(i => {
+                list.forEach((i) => {
                     const v = this.getValue(i.from); // get index value
                     this.setValue(i.to, v, false, false); // set value to index - 1
                 });
             });
 
             const lastIdxList = idxList[idxList.length - 1];
-            lastIdxList.list.forEach(i => {
+            lastIdxList.list.forEach((i) => {
                 this.remove(i.from);
             });
 
             let parentName = keyMatch.replace('.{index}', '');
             parentName = parentName.replace('[{index}]', '');
-            const parent = this.getValue(parentName);
+            const parent = this.getValue(parentName) as unknown[];
 
             if (parent) {
                 // if parseName=true then parent is an Array object but does not know an element was removed
@@ -1122,7 +1260,7 @@ class Field {
         }
     }
 
-    _resetError(name) {
+    private _resetError(name: string) {
         const field = this._get(name);
         if (field) {
             delete field.errors; //清空错误
@@ -1130,13 +1268,12 @@ class Field {
         }
     }
 
-    //trigger rerender
-    _reRender(name, action) {
+    private _reRender(name?: string | string[], action?: RerenderType | string) {
         // 指定了字段列表且字段存在对应的自定义渲染函数
         if (name) {
             const names = Array.isArray(name) ? name : [name];
-            if (names.length && names.every(n => this.reRenders[n])) {
-                names.forEach(n => {
+            if (names.length && names.every((n) => this.reRenders[n])) {
+                names.forEach((n) => {
                     const reRender = this.reRenders[n];
                     reRender(action);
                 });
@@ -1145,19 +1282,29 @@ class Field {
         }
 
         if (this.com) {
-            if (!this.options.forceUpdate && this.com.setState) {
-                this.com.setState({});
-            } else if (this.com.forceUpdate) {
-                this.com.forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
+            if (!this.options.forceUpdate && (this.com as { setState: SetState }).setState) {
+                (this.com as { setState: SetState }).setState({});
+            } else if ((this.com as Component).forceUpdate) {
+                (this.com as Component).forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
             }
         }
     }
 
-    _get(name) {
+    private _get(name: string) {
         return name in this.fieldsMeta ? this.fieldsMeta[name] : null;
     }
 
-    get(name) {
+    /**
+     * 获取全部字段信息
+     * @param name - 传递 falsy 值
+     */
+    get(name?: undefined | ''): Record<string, NormalizedFieldMeta>;
+    /**
+     * 获取指定字段信息
+     * @param name - 字段名
+     */
+    get(name: string): NormalizedFieldMeta | null;
+    get(name?: string) {
         if (name) {
             return this._get(name);
         } else {
@@ -1165,14 +1312,7 @@ class Field {
         }
     }
 
-    /**
-     *
-     * @param {string} name
-     * @param {*} value
-     * @param {*} oldValue
-     * @param {'init' | 'change' | 'setValue' | 'unmount' | 'reset'} triggerType
-     */
-    _triggerFieldChange(name, value, oldValue, triggerType) {
+    private _triggerFieldChange(name: string, value: unknown, oldValue: unknown, triggerType: WatchTriggerType) {
         // same value should not trigger change
         if (Object.is(value, oldValue)) {
             return;
@@ -1185,14 +1325,13 @@ class Field {
             callback(name, value, oldValue, triggerType);
         }
     }
-
     /**
      * 监听字段值变化
-     * @param {string[]} names 监听的name列表
-     * @param {Function} callback 变化回调
-     * @returns {Function} 解除监听回调
+     * @param names - 监听的 name 列表
+     * @param callback - 变化回调
+     * @returns 解除监听回调
      */
-    watch(names, callback) {
+    watch(names: string[], callback: WatchCallback) {
         for (const name of names) {
             if (!this.listeners[name]) {
                 this.listeners[name] = new Set();
@@ -1208,6 +1347,18 @@ class Field {
             }
         };
     }
+
+    private _triggerAfterValidateRerender(errorsGroup: ValidateErrorGroup | null) {
+        if (typeof this.afterValidateRerender === 'function') {
+            this.afterValidateRerender({
+                errorsGroup,
+                options: this.options,
+                instance: this.instance,
+            });
+        }
+    }
 }
+
+export * from './types';
 
 export default Field;
