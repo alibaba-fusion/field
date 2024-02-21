@@ -38,7 +38,7 @@ class App extends React.Component {
     state = {
         checkboxStatus: true,
     };
-    field = new Field(this, { scrollToFirstError: -10 });
+    field = new Field(this);
 
     isChecked(rule, value) {
         if (!value) {

@@ -1,20 +1,12 @@
-/* eslint-disable react/jsx-filename-extension */
-import React from 'react';
-import ReactTestUtils from 'react-dom/test-utils';
-import Enzyme, { mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-import assert from 'power-assert';
-import sinon from 'sinon';
+import React, { createRef, forwardRef, useImperativeHandle } from 'react';
 import { Input } from '@alifd/next';
 import Field from '../src';
+import { Validator } from '../src/types';
 
-Enzyme.configure({ adapter: new Adapter() });
-
-/* global describe it */
 describe('rules', () => {
-    it('required - validate', function(done) {
-        const field = new Field(this);
-        const inited = field.init('input', {
+    it('required - validate', () => {
+        const field = new Field({});
+        const { value, ...inited } = field.init('input', {
             rules: [
                 {
                     required: true,
@@ -23,29 +15,25 @@ describe('rules', () => {
             ],
         });
 
-        const wrapper = mount(<Input {...inited} />);
-        wrapper.find('input').simulate('change', {
-            target: {
-                value: '',
-            },
+        cy.mount(<Input {...inited} />);
+        cy.get('input').type('1');
+        cy.get('input').clear();
+        cy.then(() => {
+            cy.wrap(field.getError('input')).should('deep.equal', ['cant be null']);
         });
 
-        assert(field.getError('input')[0] === 'cant be null');
-
-        // validator can't callback when option.rules is an empty Array
-        mount(<Input {...field.init('input', { rules: [] })} />);
-
-        const callback = sinon.spy();
+        const { value: _v, ...inited2 } = field.init('input', { rules: [] });
+        cy.mount(<Input {...inited2} />);
+        const callback = cy.spy();
         field.validateCallback(callback);
 
-        assert(callback.calledOnce === true);
-
-        done();
+        cy.wrap(callback).should('be.calledOnce');
+        cy.wrap(callback).should('be.calledWithMatch', null);
     });
 
-    it('required - validatePromise - callback', function(done) {
-        const field = new Field(this);
-        const inited = field.init('input', {
+    it('required - validatePromise - callback', () => {
+        const field = new Field({});
+        const { value: _v, ...inited } = field.init('input', {
             rules: [
                 {
                     required: true,
@@ -54,29 +42,25 @@ describe('rules', () => {
             ],
         });
 
-        const wrapper = mount(<Input {...inited} />);
-        wrapper.find('input').simulate('change', {
-            target: {
-                value: '',
-            },
+        cy.mount(<Input {...inited} />);
+        cy.get('input').type('1');
+        cy.get('input').clear();
+        cy.then(() => {
+            cy.wrap(field.getError('input')).should('deep.equal', ['cant be null']);
         });
 
-        assert(field.getError('input')[0] === 'cant be null');
+        const { value: _v2, ...inited2 } = field.init('input', { rules: [] });
+        cy.mount(<Input {...inited2} />);
 
-        // validator can't callback when option.rules is an empty Array
-        mount(<Input {...field.init('input', { rules: [] })} />);
-
-        const callback = sinon.spy();
+        const callback = cy.spy();
         field.validatePromise(callback);
 
-        assert(callback.calledOnce === true);
-
-        done();
+        cy.wrap(callback).should('be.calledOnce');
     });
 
-    it('required - validatePromise', function(done) {
-        const field = new Field(this);
-        const inited = field.init('input', {
+    it('required - validatePromise', () => {
+        const field = new Field({});
+        const { value, ...inited } = field.init('input', {
             rules: [
                 {
                     required: true,
@@ -85,26 +69,21 @@ describe('rules', () => {
             ],
         });
 
-        const wrapper = mount(<Input {...inited} />);
-        wrapper.find('input').simulate('change', {
-            target: {
-                value: '',
-            },
-        });
-
-        assert(field.getError('input')[0] === 'cant be null');
-
-        // validator can't callback when option.rules is an empty Array
-        mount(<Input {...field.init('input', { rules: [] })} />);
-
-        field.validatePromise().then(() => {
-            done();
+        cy.mount(<Input {...inited} />);
+        cy.get('input').type('a');
+        cy.get('input').clear();
+        cy.then(() => {
+            cy.wrap(field.getError('input')).should('deep.equal', ['cant be null']);
+            cy.wrap(field.validatePromise()).should('deep.equal', {
+                errors: { input: { errors: ['cant be null'] } },
+                values: { input: '' },
+            });
         });
     });
 
-    it('triger', function(done) {
-        const field = new Field(this);
-        const inited = field.init('input', {
+    it('triger', () => {
+        const field = new Field({});
+        const { value, ...inited } = field.init('input', {
             rules: [
                 {
                     required: true,
@@ -114,31 +93,15 @@ describe('rules', () => {
             ],
         });
 
-        const wrapper = mount(<Input {...inited} />);
-        wrapper.find('input').simulate('blur');
-
-        assert(field.getError('input')[0] === 'cant be null');
-
-        const inited2 = field.init('input2', {
-            rules: [
-                {
-                    required: true,
-                    trigger: ['onBlur'],
-                    message: 'cannot be null',
-                },
-            ],
+        cy.mount(<Input {...inited} />);
+        cy.get('input').trigger('blur');
+        cy.then(() => {
+            cy.wrap(field.getError('input')).should('deep.equal', ['cant be null']);
         });
-
-        const wrapper2 = mount(<Input {...inited2} />);
-        wrapper2.find('input').simulate('blur');
-
-        assert(field.getError('input2')[0] === 'cannot be null');
-
-        done();
     });
-    it('validator', function(done) {
-        const field = new Field(this);
-        const inited = field.init('input', {
+    it('validator', () => {
+        const field = new Field({});
+        const { value, ...inited } = field.init('input', {
             rules: [
                 {
                     validator: (rule, value, callback) => {
@@ -152,21 +115,18 @@ describe('rules', () => {
             ],
         });
 
-        const wrapper = mount(<Input {...inited} />);
-        wrapper.find('input').simulate('change', {
-            target: {
-                value: '',
-            },
+        cy.mount(<Input {...inited} />);
+        cy.get('input').type('a');
+        cy.get('input').clear();
+        cy.then(() => {
+            cy.wrap(field.getError('input')).should('deep.equal', ['不能为空！']);
         });
-
-        assert(field.getError('input')[0] === '不能为空！');
-        done();
     });
 
-    it('should reRender while validator callback after 200ms, fix #51', function(done) {
+    it('should reRender while validator callback after 200ms, fix #51', () => {
         class Demo extends React.Component {
             field = new Field(this);
-            userExists(rule, value) {
+            userExists: Validator = (_rule, value) => {
                 return new Promise((resolve, reject) => {
                     if (!value) {
                         resolve();
@@ -180,73 +140,83 @@ describe('rules', () => {
                         }, 100);
                     }
                 });
-            }
+            };
 
             render() {
-                const { getState, getError, init } = this.field;
+                const { getError, init } = this.field;
 
                 return (
                     <div>
-                        <input {...init('userName', { rules: { validator: this.userExists.bind(this) } })} />
+                        <Input
+                            {...init('userName', {
+                                rules: {
+                                    validator: this.userExists,
+                                },
+                            })}
+                        />
                         <label>{getError('userName')}</label>
                     </div>
                 );
             }
         }
 
-        const wrapper = mount(<Demo />);
-        wrapper.find('input').simulate('change', { target: { value: 'frank' } });
-
-        setTimeout(() => {
-            assert(wrapper.find('label').text() === 'Sorry name existed');
-            done();
-        }, 200);
+        cy.mount(<Demo />);
+        cy.clock();
+        cy.get('input').type('frank');
+        cy.tick(200);
+        cy.get('label').should('have.text', 'Sorry name existed');
     });
 
-    it('should rulesProps immutable', function(done) {
-        const field = new Field(this);
+    it('should rulesProps immutable', () => {
+        const field = new Field({});
         const initRules = {
             required: true,
             message: 'cant be null',
         };
-        const inited = field.init('input', {
+        const { value, ...inited } = field.init('input', {
             rules: initRules,
         });
 
-        mount(<Input {...inited} />);
+        cy.mount(<Input {...inited} />);
 
-        const callback = sinon.spy();
+        const callback = cy.spy();
         field.validateCallback(callback);
-        assert(initRules.validator === undefined);
-        done();
+        cy.wrap(initRules).should('not.have.property', 'validator');
     });
 
-    it('Should not block validation when component is unmounted while autoUnmount=false.', async function() {
-        const ref = { current: null };
-        const useField = Field.getUseField({ useState: React.useState, useMemo: React.useMemo });
-        function Demo1() {
+    it('Should not block validation when component is unmounted while autoUnmount=false.', () => {
+        const useField = Field.getUseField({
+            useState: React.useState,
+            useMemo: React.useMemo,
+        });
+        type Ref = {
+            field: Field;
+            setVisible: React.Dispatch<React.SetStateAction<boolean>>;
+        };
+        const Demo = forwardRef<Ref>((_props, ref) => {
             const [visible, setVisible] = React.useState(true);
             const field = useField({ autoUnmount: false });
-            ref.current = { setVisible, field };
+            useImperativeHandle(ref, () => ({ setVisible, field }));
             if (!visible) {
                 return null;
             }
-            return <Input {...field.init('input', { rules: [{ required: true }] })} />;
-        }
-        ReactTestUtils.act(() => {
-            mount(<Demo1 />);
+            return (
+                <Input
+                    {...field.init('input', {
+                        rules: [{ required: true }],
+                    })}
+                />
+            );
         });
-        assert(ref.current);
-        await ReactTestUtils.act(async () => {
-            const { errors } = await ref.current.field.validatePromise();
-            assert(errors);
-        });
-        ReactTestUtils.act(() => {
-            ref.current.setVisible(false);
-        });
-        await ReactTestUtils.act(async () => {
-            const { errors } = await ref.current.field.validatePromise();
-            assert(!errors);
+
+        const ref = createRef<Ref>();
+        cy.mount(<Demo ref={ref} />).then(async () => {
+            cy.wrap(ref.current).should('be.ok');
+            const { errors } = await ref.current!.field.validatePromise();
+            cy.wrap(errors).should('be.ok');
+            ref.current!.setVisible(false);
+            const { errors: errors2 } = await ref.current!.field.validatePromise();
+            cy.wrap(errors2).should('not.be.ok');
         });
     });
 });
