@@ -1,4 +1,4 @@
-import type { MessagesConfig, PresetFormatter, Validator } from '@alifd/validate/lib/types';
+import type { MessagesConfig, PresetFormatter, Validator } from '@alifd/validate';
 import type { Component, useState, useMemo, Dispatch, SetStateAction, Ref, RefCallback } from 'react';
 
 export { Validator };

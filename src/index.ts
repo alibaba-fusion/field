@@ -1,6 +1,5 @@
-import { Component, MutableRefObject } from 'react';
-import Validate from '@alifd/validate';
-import { NormalizedValidateError } from '@alifd/validate/lib/types';
+import type { Component, MutableRefObject } from 'react';
+import Validate, { type NormalizedValidateError } from '@alifd/validate';
 import {
     getValueFromEvent,
     getErrorStrs,
@@ -14,7 +13,7 @@ import {
     cloneToRuleArr,
     isOverwritten,
 } from './utils';
-import {
+import type {
     FieldOption,
     ComponentInstance,
     GetUseFieldOption,
@@ -59,16 +58,16 @@ class Field {
         };
     }
 
-    private com: ComponentInstance;
-    private fieldsMeta: Record<string, FieldMeta>;
-    private cachedBind: Record<string, Record<string, unknown>>;
-    private instance: Record<string, unknown>;
-    private instanceCount: Record<string, number>;
-    private reRenders: Record<string, RerenderFunction>;
-    private listeners: Record<string, Set<WatchCallback>>;
-    private values: FieldValues;
-    private processErrorMessage?: FieldOption['processErrorMessage'];
-    private afterValidateRerender?: FieldOption['afterValidateRerender'];
+    fieldsMeta: Record<string, FieldMeta>;
+    cachedBind: Record<string, Record<string, unknown>>;
+    instance: Record<string, unknown>;
+    instanceCount: Record<string, number>;
+    reRenders: Record<string, RerenderFunction>;
+    listeners: Record<string, Set<WatchCallback>>;
+    values: FieldValues;
+    processErrorMessage?: FieldOption['processErrorMessage'];
+    afterValidateRerender?: FieldOption['afterValidateRerender'];
+    com: ComponentInstance;
     options: NormalizedFieldOption;
 
     constructor(com: ComponentInstance, options: FieldOption = {}) {
@@ -259,8 +258,8 @@ class Field {
             id: id || name,
             ref: this._getCacheBind(name, `${name}__ref`, this._saveRef),
             [valueName]: setValueFormatter
-                ? setValueFormatter(field.value as any, field.inputValues)
-                : (field.value as any),
+                ? setValueFormatter(field.value as ValueType, field.inputValues)
+                : field.value,
         };
 
         let rulesMap: Record<string, Omit<Rule, 'trigger'>[]> = {};
@@ -887,11 +886,11 @@ class Field {
         };
     }
 
-    private _get(name: string) {
+    _get(name: string) {
         return name in this.fieldsMeta ? this.fieldsMeta[name] : null;
     }
 
-    private _getInitMeta(name: string) {
+    _getInitMeta(name: string) {
         if (!(name in this.fieldsMeta)) {
             this.fieldsMeta[name] = Object.assign({ name }, initMeta);
         }
@@ -899,7 +898,7 @@ class Field {
         return this.fieldsMeta[name];
     }
 
-    private _getErrorsGroup({ errors, fieldNames }: { errors: NormalizedValidateError[]; fieldNames: string[] }) {
+    _getErrorsGroup({ errors, fieldNames }: { errors: NormalizedValidateError[]; fieldNames: string[] }) {
         let errorsGroup: ValidateErrorGroup | null = null;
         if (errors && errors.length) {
             errorsGroup = {};
@@ -943,7 +942,7 @@ class Field {
         return errorsGroup;
     }
 
-    private _reset(ns?: string | string[], backToDefault?: boolean) {
+    _reset(ns?: string | string[], backToDefault?: boolean) {
         if (typeof ns === 'string') {
             ns = [ns];
         }
@@ -981,7 +980,7 @@ class Field {
         }
     }
 
-    private _resetError(name: string) {
+    _resetError(name: string) {
         const field = this._get(name);
         if (field) {
             delete field.errors; //清空错误
@@ -989,7 +988,7 @@ class Field {
         }
     }
 
-    private _reRender(name?: string | string[], action?: RerenderType | string) {
+    _reRender(name?: string | string[], action?: RerenderType | string) {
         // 指定了字段列表且字段存在对应的自定义渲染函数
         if (name) {
             const names = Array.isArray(name) ? name : [name];
@@ -1014,7 +1013,7 @@ class Field {
     /**
      * Get errors using `getErrors` and format to match the structure of errors returned in field.validate
      */
-    private formatGetErrors(names?: string[]) {
+    formatGetErrors(names?: string[]) {
         const errors = this.getErrors(names);
         let formattedErrors: ValidateErrorGroup | null = null;
         for (const field in errors) {
@@ -1033,13 +1032,13 @@ class Field {
      * call native event from props.onXx
      * eg: props.onChange props.onBlur props.onFocus
      */
-    private _callNativePropsEvent(action: string, props: Record<string, unknown>, ...args: unknown[]) {
+    _callNativePropsEvent(action: string, props: Record<string, unknown>, ...args: unknown[]) {
         action in props &&
             typeof props[action] === 'function' &&
             (props[action] as (...args: unknown[]) => unknown)(...args);
     }
 
-    private _proxyFieldValue(field: NormalizedFieldMeta) {
+    _proxyFieldValue(field: NormalizedFieldMeta) {
         const _this = this;
         Object.defineProperty(field, 'value', {
             configurable: true,
@@ -1058,7 +1057,7 @@ class Field {
     /**
      * update field.value and validate
      */
-    private _updateFieldValue(name: string, ...others: unknown[]) {
+    _updateFieldValue(name: string, ...others: unknown[]) {
         const e = others[0];
         const field = this._get(name);
 
@@ -1078,7 +1077,7 @@ class Field {
     /**
      * ref must always be the same function, or if not it will be triggerd every time.
      */
-    private _getCacheBind<Args extends unknown[], Result>(
+    _getCacheBind<Args extends unknown[], Result>(
         name: string,
         action: string,
         fn: (name: string, ...args: Args) => Result
@@ -1090,17 +1089,17 @@ class Field {
         return cache[action] as (...args: Args) => Result;
     }
 
-    private _setCache(name: string, action: string, hander: unknown) {
+    _setCache(name: string, action: string, hander: unknown) {
         const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
         cache[action] = hander;
     }
 
-    private _getCache<R = unknown>(name: string, action: string): R | undefined {
+    _getCache<R = unknown>(name: string, action: string): R | undefined {
         const cache = this.cachedBind[name] || {};
         return cache[action] as R | undefined;
     }
 
-    private _saveRef(name: string, component: unknown) {
+    _saveRef(name: string, component: unknown) {
         const key = `${name}_field`;
         const autoUnmount = this.options.autoUnmount;
 
@@ -1180,7 +1179,7 @@ class Field {
         }
     }
 
-    private _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
+    _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
         const field = this._get(name);
         if (!field) {
             return;
@@ -1234,7 +1233,7 @@ class Field {
     /**
      * splice array
      */
-    private _spliceArrayValue(key: string, index: number, howmany: number, ...argv: unknown[]) {
+    _spliceArrayValue(key: string, index: number, howmany: number, ...argv: unknown[]) {
         const argc = argv.length;
         const offset = howmany - argc; // how the reset fieldMeta move
         const startIndex = index + howmany; // 计算起点
@@ -1335,7 +1334,7 @@ class Field {
         this._reRender();
     }
 
-    private _triggerFieldChange(name: string, value: unknown, oldValue: unknown, triggerType: WatchTriggerType) {
+    _triggerFieldChange(name: string, value: unknown, oldValue: unknown, triggerType: WatchTriggerType) {
         // same value should not trigger change
         if (Object.is(value, oldValue)) {
             return;
@@ -1349,7 +1348,7 @@ class Field {
         }
     }
 
-    private _triggerAfterValidateRerender(errorsGroup: ValidateErrorGroup | null) {
+    _triggerAfterValidateRerender(errorsGroup: ValidateErrorGroup | null) {
         if (typeof this.afterValidateRerender === 'function') {
             this.afterValidateRerender({
                 errorsGroup,
