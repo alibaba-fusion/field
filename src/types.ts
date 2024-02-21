@@ -1,7 +1,7 @@
 import type { MessagesConfig, PresetFormatter, Validator } from '@alifd/validate';
 import type { Component, useState, useMemo, Dispatch, SetStateAction, Ref, RefCallback } from 'react';
 
-export { Validator };
+export type { Validator };
 
 export type FieldValues = Record<string, unknown>;
 

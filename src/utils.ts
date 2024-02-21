@@ -1,5 +1,5 @@
-import { ChangeEvent } from 'react';
-import { UnknownFunction } from './types';
+import type { ChangeEvent } from 'react';
+import type { UnknownFunction } from './types';
 
 export function splitNameToPath(name: ''): '';
 export function splitNameToPath(name: string): string[];
