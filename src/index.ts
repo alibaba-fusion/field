@@ -316,216 +316,6 @@ class Field {
     }
 
     /**
-     * call native event from props.onXx
-     * eg: props.onChange props.onBlur props.onFocus
-     */
-    private _callNativePropsEvent(action: string, props: Record<string, unknown>, ...args: unknown[]) {
-        action in props &&
-            typeof props[action] === 'function' &&
-            (props[action] as (...args: unknown[]) => unknown)(...args);
-    }
-
-    private _getInitMeta(name: string) {
-        if (!(name in this.fieldsMeta)) {
-            this.fieldsMeta[name] = Object.assign({ name }, initMeta);
-        }
-
-        return this.fieldsMeta[name];
-    }
-
-    private _proxyFieldValue(field: NormalizedFieldMeta) {
-        const _this = this;
-        Object.defineProperty(field, 'value', {
-            configurable: true,
-            enumerable: true,
-            get() {
-                return getIn(_this.values, this.name);
-            },
-            set(v) {
-                // 此处 this 解释同上
-                _this.values = setIn(_this.values, this.name, v);
-                return true;
-            },
-        });
-    }
-
-    /**
-     * update field.value and validate
-     */
-    private _updateFieldValue(name: string, ...others: unknown[]) {
-        const e = others[0];
-        const field = this._get(name);
-
-        if (!field) {
-            return;
-        }
-        field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
-        field.inputValues = others;
-
-        if (this.options.parseName) {
-            this.values = setIn(this.values, name, field.value);
-        } else {
-            this.values[name] = field.value;
-        }
-    }
-
-    /**
-     * ref must always be the same function, or if not it will be triggerd every time.
-     */
-    private _getCacheBind<Args extends unknown[], Result>(
-        name: string,
-        action: string,
-        fn: (name: string, ...args: Args) => Result
-    ): (...args: Args) => Result {
-        const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
-        if (!cache[action]) {
-            cache[action] = fn.bind(this, name);
-        }
-        return cache[action] as (...args: Args) => Result;
-    }
-
-    private _setCache(name: string, action: string, hander: unknown) {
-        const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
-        cache[action] = hander;
-    }
-
-    private _getCache<R = unknown>(name: string, action: string): R | undefined {
-        const cache = this.cachedBind[name] || {};
-        return cache[action] as R | undefined;
-    }
-
-    private _saveRef(name: string, component: unknown) {
-        const key = `${name}_field`;
-        const autoUnmount = this.options.autoUnmount;
-
-        if (!component && autoUnmount) {
-            // more than one component, do nothing
-            this.instanceCount[name] && this.instanceCount[name]--;
-            if (this.instanceCount[name] > 0) {
-                return;
-            }
-
-            // component with same name (eg: type ? <A name="n"/>:<B name="n"/>)
-            // while type changed, B will render before A unmount. so we should cached value for B
-            // step: render -> B mount -> 1. _saveRef(A, null) -> 2. _saveRef(B, ref) -> render
-            // 1. _saveRef(A, null)
-            const cache = this.fieldsMeta[name];
-            if (cache) {
-                if (this.options.parseName) {
-                    // 若 parseName 模式下，因为 value 为 getter、setter，所以将当前值记录到_value 内
-                    cache._value = cache.value;
-                }
-                this._setCache(name, key, cache);
-            }
-
-            // after destroy, delete data
-            delete this.instance[name];
-            delete this.reRenders[name];
-            const oldValue = this.getValue(name);
-            this.remove(name);
-            const newValue = this.getValue(name);
-            this._triggerFieldChange(name, newValue, oldValue, 'unmount');
-            return;
-        }
-
-        // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
-        if (autoUnmount && !this.fieldsMeta[name] && this._getCache(name, key)) {
-            const cache = this._getCache<NormalizedFieldMeta>(name, key)!;
-            this.fieldsMeta[name] = cache;
-            // 若 parseName 模式，则使用_value 作为值设置到 values 内
-            this.setValue(name, this.options.parseName ? cache._value : cache.value, false, false);
-            this.options.parseName && '_value' in cache && delete cache._value;
-        }
-
-        // only one time here
-        const field = this._get(name);
-
-        if (field) {
-            //When the autoUnmount is false, the component uninstallation needs to clear the verification information to avoid blocking the validation.
-            if (!component && !autoUnmount) {
-                field.state = '';
-                delete field.errors;
-                delete (field as FieldMeta).rules;
-                delete field.rulesMap;
-            }
-            const ref = field.ref;
-            if (ref) {
-                if (typeof ref === 'string') {
-                    throw new Error(`can not set string ref for ${name}`);
-                } else if (typeof ref === 'function') {
-                    ref(component);
-                } else if (typeof ref === 'object' && 'current' in ref) {
-                    // while ref = React.createRef() ref={ current: null}
-                    (ref as MutableRefObject<unknown>).current = component;
-                }
-            }
-
-            // mount
-            if (autoUnmount && component) {
-                let cnt = this.instanceCount[name];
-                if (!cnt) {
-                    cnt = 0;
-                }
-
-                this.instanceCount[name] = cnt + 1;
-            }
-
-            this.instance[name] = component;
-        }
-    }
-
-    private _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
-        const field = this._get(name);
-        if (!field) {
-            return;
-        }
-
-        const value = field.value;
-
-        field.state = 'loading';
-        let validate = this._getCache<Validate>(name, trigger);
-
-        if (validate && typeof validate.abort === 'function') {
-            validate.abort();
-        }
-        validate = new Validate({ [name]: rule }, { messages: this.options.messages });
-
-        this._setCache(name, trigger, validate);
-
-        validate.validate(
-            {
-                [name]: value,
-            },
-            (errors) => {
-                let newErrors: string[], newState: FieldState;
-                if (errors && errors.length) {
-                    newErrors = getErrorStrs(errors, this.processErrorMessage);
-                    newState = 'error';
-                } else {
-                    newErrors = [];
-                    newState = 'success';
-                }
-
-                let reRender = false;
-                // only status or errors changed, Rerender
-                if (
-                    newState !== field.state ||
-                    !field.errors ||
-                    newErrors.length !== field.errors.length ||
-                    newErrors.find((e, idx) => e !== field.errors![idx])
-                ) {
-                    reRender = true;
-                }
-
-                field.errors = newErrors;
-                field.state = newState;
-
-                reRender && this._reRender(name, 'validate');
-            }
-        );
-    }
-
-    /**
      * 获取单个输入控件的值
      * @param name - 字段名
      * @returns 字段值
@@ -620,6 +410,34 @@ class Field {
     }
 
     /**
+     * 获取单个输入控件的 Error
+     * @param name - 字段名
+     * @returns 该字段的 Error
+     */
+    getError(name: string) {
+        const field = this._get(name);
+        if (field && field.errors && field.errors.length) {
+            return field.errors;
+        }
+
+        return null;
+    }
+
+    /**
+     * 获取一组输入控件的 Error
+     * @param names - 字段名列表
+     * @returns 不传入`names`参数，则获取全部字段的 Error
+     */
+    getErrors<K extends string>(names?: K[]) {
+        const fields = names || this.getNames();
+        const allErrors = {} as Record<K, unknown[] | null>;
+        fields.forEach((f: K) => {
+            allErrors[f] = this.getError(f);
+        });
+        return allErrors;
+    }
+
+    /**
      * 设置单个输入控件的 Error
      * @param name - 字段名
      * @param errors - 错误信息
@@ -653,34 +471,6 @@ class Field {
     }
 
     /**
-     * 获取单个输入控件的 Error
-     * @param name - 字段名
-     * @returns 该字段的 Error
-     */
-    getError(name: string) {
-        const field = this._get(name);
-        if (field && field.errors && field.errors.length) {
-            return field.errors;
-        }
-
-        return null;
-    }
-
-    /**
-     * 获取一组输入控件的 Error
-     * @param names - 字段名列表
-     * @returns 不传入`names`参数，则获取全部字段的 Error
-     */
-    getErrors<K extends string>(names?: K[]) {
-        const fields = names || this.getNames();
-        const allErrors = {} as Record<K, unknown[] | null>;
-        fields.forEach((f: K) => {
-            allErrors[f] = this.getError(f);
-        });
-        return allErrors;
-    }
-
-    /**
      * 获取单个字段的校验状态
      * @param name - 字段名
      */
@@ -692,24 +482,6 @@ class Field {
         }
 
         return '';
-    }
-
-    /**
-     * Get errors using `getErrors` and format to match the structure of errors returned in field.validate
-     */
-    private formatGetErrors(names?: string[]) {
-        const errors = this.getErrors(names);
-        let formattedErrors: ValidateErrorGroup | null = null;
-        for (const field in errors) {
-            if (errors.hasOwnProperty(field) && errors[field]) {
-                const errorsObj = errors[field]!;
-                if (!formattedErrors) {
-                    formattedErrors = {};
-                }
-                formattedErrors[field] = { errors: errorsObj };
-            }
-        }
-        return formattedErrors;
     }
 
     /**
@@ -912,6 +684,221 @@ class Field {
         return callbackResults;
     }
 
+    /**
+     * 重置一组输入控件的值，并清空校验信息
+     * @param names - 要重置的字段名，不传递则重置全部字段
+     */
+    reset(ns?: string | string[]) {
+        this._reset(ns, false);
+    }
+
+    /**
+     * 重置一组输入控件的值为默认值，并清空校验信息
+     * @param names - 要重置的字段名，不传递则重置全部字段
+     */
+    resetToDefault(ns?: string | string[]) {
+        this._reset(ns, true);
+    }
+
+    /**
+     * 获取所有字段名列表
+     */
+    getNames() {
+        const fieldsMeta = this.fieldsMeta;
+        return Object.keys(fieldsMeta).filter(() => {
+            return true;
+        });
+    }
+
+    /**
+     * 删除某一个或者一组控件的数据，删除后与之相关的 validate/value 都会被清空
+     * @param name - 要删除的字段名，不传递则删除全部字段
+     */
+    remove(ns?: string | string[]) {
+        if (typeof ns === 'string') {
+            ns = [ns];
+        }
+        if (!ns) {
+            this.values = {};
+        }
+
+        const names = ns || Object.keys(this.fieldsMeta);
+        names.forEach((name) => {
+            if (name in this.fieldsMeta) {
+                delete this.fieldsMeta[name];
+            }
+            if (this.options.parseName) {
+                this.values = deleteIn(this.values, name);
+            } else {
+                delete this.values[name];
+            }
+        });
+    }
+
+    /**
+     * 向指定数组字段内添加数据
+     * @param name - 字段名
+     * @param index - 开始添加的索引
+     * @param argv - 新增的数据
+     */
+    addArrayValue(name: string, index: number, ...argv: unknown[]) {
+        return this._spliceArrayValue(name, index, 0, ...argv);
+    }
+
+    /**
+     * 删除指定字段数组内的数据
+     * @param name - 变量名
+     * @param index - 开始删除的索引
+     * @param howmany - 删除几个数据，默认为 1
+     */
+    deleteArrayValue(name: string, index: number, howmany = 1) {
+        return this._spliceArrayValue(name, index, howmany);
+    }
+
+    /**
+     * splice in a Array [deprecated]
+     * @deprecated Use `addArrayValue` or `deleteArrayValue` instead
+     * @param keyMatch - like name.\{index\}
+     * @param startIndex - index
+     */
+    spliceArray(keyMatch: string, startIndex: number) {
+        // @ts-expect-error FIXME 无效的 if 逻辑，恒定为 false
+        if (keyMatch.match(/{index}$/) === -1) {
+            warning('key should match /{index}$/');
+            return;
+        }
+
+        // regex to match field names in the same target array
+        const reg = keyMatch.replace('{index}', '(\\d+)');
+        const keyReg = new RegExp(`^${reg}`);
+
+        const listMap: Record<string, Array<{ from: string; to: string }>> = {};
+        /**
+         * keyMatch='key.\{index\}'
+         * case 1: names=['key.0', 'key.1'], should delete 'key.1'
+         * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
+         */
+        const names = this.getNames();
+        const willChangeNames: string[] = [];
+        names.forEach((n) => {
+            // is name in the target array?
+            const ret = keyReg.exec(n);
+            if (ret) {
+                const index = parseInt(ret[1]);
+
+                if (index > startIndex) {
+                    const l = listMap[index];
+                    const item = {
+                        from: n,
+                        to: `${keyMatch.replace('{index}', (index - 1).toString())}${n.replace(ret[0], '')}`,
+                    };
+                    willChangeNames.push(item.from);
+                    if (names.includes(item.to)) {
+                        willChangeNames.push(item.to);
+                    }
+                    if (!l) {
+                        listMap[index] = [item];
+                    } else {
+                        l.push(item);
+                    }
+                }
+            }
+        });
+        const oldValues = this.getValues(willChangeNames);
+
+        const idxList = Object.keys(listMap)
+            .map((i) => {
+                return {
+                    index: Number(i),
+                    list: listMap[i],
+                };
+            })
+            // @ts-expect-error FIXME 返回 boolean 值并不能正确排序
+            .sort((a, b) => a.index < b.index);
+
+        // should be continuous array
+        if (idxList.length > 0 && idxList[0].index === startIndex + 1) {
+            idxList.forEach((l) => {
+                const list = l.list;
+                list.forEach((i) => {
+                    const v = this.getValue(i.from); // get index value
+                    this.setValue(i.to, v, false, false); // set value to index - 1
+                });
+            });
+
+            const lastIdxList = idxList[idxList.length - 1];
+            lastIdxList.list.forEach((i) => {
+                this.remove(i.from);
+            });
+
+            let parentName = keyMatch.replace('.{index}', '');
+            parentName = parentName.replace('[{index}]', '');
+            const parent = this.getValue(parentName) as unknown[];
+
+            if (parent) {
+                // if parseName=true then parent is an Array object but does not know an element was removed
+                // this manually decrements the array length
+                parent.length--;
+            }
+        }
+        for (const name of willChangeNames) {
+            this._triggerFieldChange(name, this.getValue(name), oldValues[name], 'setValue');
+        }
+    }
+
+    /**
+     * 获取全部字段信息
+     * @param name - 传递 falsy 值
+     */
+    get(name?: undefined | ''): Record<string, NormalizedFieldMeta>;
+    /**
+     * 获取指定字段信息
+     * @param name - 字段名
+     */
+    get(name: string): NormalizedFieldMeta | null;
+    get(name?: string) {
+        if (name) {
+            return this._get(name);
+        } else {
+            return this.fieldsMeta;
+        }
+    }
+
+    /**
+     * 监听字段值变化
+     * @param names - 监听的 name 列表
+     * @param callback - 变化回调
+     * @returns 解除监听回调
+     */
+    watch(names: string[], callback: WatchCallback) {
+        for (const name of names) {
+            if (!this.listeners[name]) {
+                this.listeners[name] = new Set();
+            }
+            const set = this.listeners[name];
+            set.add(callback);
+        }
+        return () => {
+            for (const name of names) {
+                if (this.listeners[name]) {
+                    this.listeners[name].delete(callback);
+                }
+            }
+        };
+    }
+
+    private _get(name: string) {
+        return name in this.fieldsMeta ? this.fieldsMeta[name] : null;
+    }
+
+    private _getInitMeta(name: string) {
+        if (!(name in this.fieldsMeta)) {
+            this.fieldsMeta[name] = Object.assign({ name }, initMeta);
+        }
+
+        return this.fieldsMeta[name];
+    }
+
     private _getErrorsGroup({ errors, fieldNames }: { errors: NormalizedValidateError[]; fieldNames: string[] }) {
         let errorsGroup: ValidateErrorGroup | null = null;
         if (errors && errors.length) {
@@ -994,75 +981,254 @@ class Field {
         }
     }
 
-    /**
-     * 重置一组输入控件的值，并清空校验信息
-     * @param names - 要重置的字段名，不传递则重置全部字段
-     */
-    reset(ns?: string | string[]) {
-        this._reset(ns, false);
+    private _resetError(name: string) {
+        const field = this._get(name);
+        if (field) {
+            delete field.errors; //清空错误
+            field.state = '';
+        }
+    }
+
+    private _reRender(name?: string | string[], action?: RerenderType | string) {
+        // 指定了字段列表且字段存在对应的自定义渲染函数
+        if (name) {
+            const names = Array.isArray(name) ? name : [name];
+            if (names.length && names.every((n) => this.reRenders[n])) {
+                names.forEach((n) => {
+                    const reRender = this.reRenders[n];
+                    reRender(action);
+                });
+                return;
+            }
+        }
+
+        if (this.com) {
+            if (!this.options.forceUpdate && (this.com as { setState: SetState }).setState) {
+                (this.com as { setState: SetState }).setState({});
+            } else if ((this.com as Component).forceUpdate) {
+                (this.com as Component).forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
+            }
+        }
     }
 
     /**
-     * 重置一组输入控件的值为默认值，并清空校验信息
-     * @param names - 要重置的字段名，不传递则重置全部字段
+     * Get errors using `getErrors` and format to match the structure of errors returned in field.validate
      */
-    resetToDefault(ns?: string | string[]) {
-        this._reset(ns, true);
+    private formatGetErrors(names?: string[]) {
+        const errors = this.getErrors(names);
+        let formattedErrors: ValidateErrorGroup | null = null;
+        for (const field in errors) {
+            if (errors.hasOwnProperty(field) && errors[field]) {
+                const errorsObj = errors[field]!;
+                if (!formattedErrors) {
+                    formattedErrors = {};
+                }
+                formattedErrors[field] = { errors: errorsObj };
+            }
+        }
+        return formattedErrors;
     }
 
     /**
-     * 获取所有字段名列表
+     * call native event from props.onXx
+     * eg: props.onChange props.onBlur props.onFocus
      */
-    getNames() {
-        const fieldsMeta = this.fieldsMeta;
-        return Object.keys(fieldsMeta).filter(() => {
-            return true;
+    private _callNativePropsEvent(action: string, props: Record<string, unknown>, ...args: unknown[]) {
+        action in props &&
+            typeof props[action] === 'function' &&
+            (props[action] as (...args: unknown[]) => unknown)(...args);
+    }
+
+    private _proxyFieldValue(field: NormalizedFieldMeta) {
+        const _this = this;
+        Object.defineProperty(field, 'value', {
+            configurable: true,
+            enumerable: true,
+            get() {
+                return getIn(_this.values, this.name);
+            },
+            set(v) {
+                // 此处 this 解释同上
+                _this.values = setIn(_this.values, this.name, v);
+                return true;
+            },
         });
     }
 
     /**
-     * 删除某一个或者一组控件的数据，删除后与之相关的 validate/value 都会被清空
-     * @param name - 要删除的字段名，不传递则删除全部字段
+     * update field.value and validate
      */
-    remove(ns?: string | string[]) {
-        if (typeof ns === 'string') {
-            ns = [ns];
-        }
-        if (!ns) {
-            this.values = {};
-        }
+    private _updateFieldValue(name: string, ...others: unknown[]) {
+        const e = others[0];
+        const field = this._get(name);
 
-        const names = ns || Object.keys(this.fieldsMeta);
-        names.forEach((name) => {
-            if (name in this.fieldsMeta) {
-                delete this.fieldsMeta[name];
-            }
-            if (this.options.parseName) {
-                this.values = deleteIn(this.values, name);
-            } else {
-                delete this.values[name];
-            }
-        });
+        if (!field) {
+            return;
+        }
+        field.value = field.getValueFormatter ? field.getValueFormatter.apply(this, others) : getValueFromEvent(e);
+        field.inputValues = others;
+
+        if (this.options.parseName) {
+            this.values = setIn(this.values, name, field.value);
+        } else {
+            this.values[name] = field.value;
+        }
     }
 
     /**
-     * 向指定数组字段内添加数据
-     * @param name - 字段名
-     * @param index - 开始添加的索引
-     * @param argv - 新增的数据
+     * ref must always be the same function, or if not it will be triggerd every time.
      */
-    addArrayValue(name: string, index: number, ...argv: unknown[]) {
-        return this._spliceArrayValue(name, index, 0, ...argv);
+    private _getCacheBind<Args extends unknown[], Result>(
+        name: string,
+        action: string,
+        fn: (name: string, ...args: Args) => Result
+    ): (...args: Args) => Result {
+        const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
+        if (!cache[action]) {
+            cache[action] = fn.bind(this, name);
+        }
+        return cache[action] as (...args: Args) => Result;
     }
 
-    /**
-     * 删除指定字段数组内的数据
-     * @param name - 变量名
-     * @param index - 开始删除的索引
-     * @param howmany - 删除几个数据，默认为 1
-     */
-    deleteArrayValue(name: string, index: number, howmany = 1) {
-        return this._spliceArrayValue(name, index, howmany);
+    private _setCache(name: string, action: string, hander: unknown) {
+        const cache = (this.cachedBind[name] = this.cachedBind[name] || {});
+        cache[action] = hander;
+    }
+
+    private _getCache<R = unknown>(name: string, action: string): R | undefined {
+        const cache = this.cachedBind[name] || {};
+        return cache[action] as R | undefined;
+    }
+
+    private _saveRef(name: string, component: unknown) {
+        const key = `${name}_field`;
+        const autoUnmount = this.options.autoUnmount;
+
+        if (!component && autoUnmount) {
+            // more than one component, do nothing
+            this.instanceCount[name] && this.instanceCount[name]--;
+            if (this.instanceCount[name] > 0) {
+                return;
+            }
+
+            // component with same name (eg: type ? <A name="n"/>:<B name="n"/>)
+            // while type changed, B will render before A unmount. so we should cached value for B
+            // step: render -> B mount -> 1. _saveRef(A, null) -> 2. _saveRef(B, ref) -> render
+            // 1. _saveRef(A, null)
+            const cache = this.fieldsMeta[name];
+            if (cache) {
+                if (this.options.parseName) {
+                    // 若 parseName 模式下，因为 value 为 getter、setter，所以将当前值记录到_value 内
+                    cache._value = cache.value;
+                }
+                this._setCache(name, key, cache);
+            }
+
+            // after destroy, delete data
+            delete this.instance[name];
+            delete this.reRenders[name];
+            const oldValue = this.getValue(name);
+            this.remove(name);
+            const newValue = this.getValue(name);
+            this._triggerFieldChange(name, newValue, oldValue, 'unmount');
+            return;
+        }
+
+        // 2. _saveRef(B, ref) (eg: same name but different compoent may be here)
+        if (autoUnmount && !this.fieldsMeta[name] && this._getCache(name, key)) {
+            const cache = this._getCache<NormalizedFieldMeta>(name, key)!;
+            this.fieldsMeta[name] = cache;
+            // 若 parseName 模式，则使用_value 作为值设置到 values 内
+            this.setValue(name, this.options.parseName ? cache._value : cache.value, false, false);
+            this.options.parseName && '_value' in cache && delete cache._value;
+        }
+
+        // only one time here
+        const field = this._get(name);
+
+        if (field) {
+            //When the autoUnmount is false, the component uninstallation needs to clear the verification information to avoid blocking the validation.
+            if (!component && !autoUnmount) {
+                field.state = '';
+                delete field.errors;
+                delete (field as FieldMeta).rules;
+                delete field.rulesMap;
+            }
+            const ref = field.ref;
+            if (ref) {
+                if (typeof ref === 'string') {
+                    throw new Error(`can not set string ref for ${name}`);
+                } else if (typeof ref === 'function') {
+                    ref(component);
+                } else if (typeof ref === 'object' && 'current' in ref) {
+                    // while ref = React.createRef() ref={ current: null}
+                    (ref as MutableRefObject<unknown>).current = component;
+                }
+            }
+
+            // mount
+            if (autoUnmount && component) {
+                let cnt = this.instanceCount[name];
+                if (!cnt) {
+                    cnt = 0;
+                }
+
+                this.instanceCount[name] = cnt + 1;
+            }
+
+            this.instance[name] = component;
+        }
+    }
+
+    private _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
+        const field = this._get(name);
+        if (!field) {
+            return;
+        }
+
+        const value = field.value;
+
+        field.state = 'loading';
+        let validate = this._getCache<Validate>(name, trigger);
+
+        if (validate && typeof validate.abort === 'function') {
+            validate.abort();
+        }
+        validate = new Validate({ [name]: rule }, { messages: this.options.messages });
+
+        this._setCache(name, trigger, validate);
+
+        validate.validate(
+            {
+                [name]: value,
+            },
+            (errors) => {
+                let newErrors: string[], newState: FieldState;
+                if (errors && errors.length) {
+                    newErrors = getErrorStrs(errors, this.processErrorMessage);
+                    newState = 'error';
+                } else {
+                    newErrors = [];
+                    newState = 'success';
+                }
+
+                let reRender = false;
+                // only status or errors changed, Rerender
+                if (
+                    newState !== field.state ||
+                    !field.errors ||
+                    newErrors.length !== field.errors.length ||
+                    newErrors.find((e, idx) => e !== field.errors![idx])
+                ) {
+                    reRender = true;
+                }
+
+                field.errors = newErrors;
+                field.state = newState;
+
+                reRender && this._reRender(name, 'validate');
+            }
+        );
     }
 
     /**
@@ -1169,149 +1335,6 @@ class Field {
         this._reRender();
     }
 
-    /**
-     * splice in a Array [deprecated]
-     * @deprecated Use `addArrayValue` or `deleteArrayValue` instead
-     * @param keyMatch - like name.\{index\}
-     * @param startIndex - index
-     */
-    spliceArray(keyMatch: string, startIndex: number) {
-        // @ts-expect-error FIXME 无效的 if 逻辑，恒定为 false
-        if (keyMatch.match(/{index}$/) === -1) {
-            warning('key should match /{index}$/');
-            return;
-        }
-
-        // regex to match field names in the same target array
-        const reg = keyMatch.replace('{index}', '(\\d+)');
-        const keyReg = new RegExp(`^${reg}`);
-
-        const listMap: Record<string, Array<{ from: string; to: string }>> = {};
-        /**
-         * keyMatch='key.\{index\}'
-         * case 1: names=['key.0', 'key.1'], should delete 'key.1'
-         * case 2: names=['key.0.name', 'key.0.email', 'key.1.name', 'key.1.email'], should delete 'key.1.name', 'key.1.email'
-         */
-        const names = this.getNames();
-        const willChangeNames: string[] = [];
-        names.forEach((n) => {
-            // is name in the target array?
-            const ret = keyReg.exec(n);
-            if (ret) {
-                const index = parseInt(ret[1]);
-
-                if (index > startIndex) {
-                    const l = listMap[index];
-                    const item = {
-                        from: n,
-                        to: `${keyMatch.replace('{index}', (index - 1).toString())}${n.replace(ret[0], '')}`,
-                    };
-                    willChangeNames.push(item.from);
-                    if (names.includes(item.to)) {
-                        willChangeNames.push(item.to);
-                    }
-                    if (!l) {
-                        listMap[index] = [item];
-                    } else {
-                        l.push(item);
-                    }
-                }
-            }
-        });
-        const oldValues = this.getValues(willChangeNames);
-
-        const idxList = Object.keys(listMap)
-            .map((i) => {
-                return {
-                    index: Number(i),
-                    list: listMap[i],
-                };
-            })
-            // @ts-expect-error FIXME 返回 boolean 值并不能正确排序
-            .sort((a, b) => a.index < b.index);
-
-        // should be continuous array
-        if (idxList.length > 0 && idxList[0].index === startIndex + 1) {
-            idxList.forEach((l) => {
-                const list = l.list;
-                list.forEach((i) => {
-                    const v = this.getValue(i.from); // get index value
-                    this.setValue(i.to, v, false, false); // set value to index - 1
-                });
-            });
-
-            const lastIdxList = idxList[idxList.length - 1];
-            lastIdxList.list.forEach((i) => {
-                this.remove(i.from);
-            });
-
-            let parentName = keyMatch.replace('.{index}', '');
-            parentName = parentName.replace('[{index}]', '');
-            const parent = this.getValue(parentName) as unknown[];
-
-            if (parent) {
-                // if parseName=true then parent is an Array object but does not know an element was removed
-                // this manually decrements the array length
-                parent.length--;
-            }
-        }
-        for (const name of willChangeNames) {
-            this._triggerFieldChange(name, this.getValue(name), oldValues[name], 'setValue');
-        }
-    }
-
-    private _resetError(name: string) {
-        const field = this._get(name);
-        if (field) {
-            delete field.errors; //清空错误
-            field.state = '';
-        }
-    }
-
-    private _reRender(name?: string | string[], action?: RerenderType | string) {
-        // 指定了字段列表且字段存在对应的自定义渲染函数
-        if (name) {
-            const names = Array.isArray(name) ? name : [name];
-            if (names.length && names.every((n) => this.reRenders[n])) {
-                names.forEach((n) => {
-                    const reRender = this.reRenders[n];
-                    reRender(action);
-                });
-                return;
-            }
-        }
-
-        if (this.com) {
-            if (!this.options.forceUpdate && (this.com as { setState: SetState }).setState) {
-                (this.com as { setState: SetState }).setState({});
-            } else if ((this.com as Component).forceUpdate) {
-                (this.com as Component).forceUpdate(); //forceUpdate 对性能有较大的影响，成指数上升
-            }
-        }
-    }
-
-    private _get(name: string) {
-        return name in this.fieldsMeta ? this.fieldsMeta[name] : null;
-    }
-
-    /**
-     * 获取全部字段信息
-     * @param name - 传递 falsy 值
-     */
-    get(name?: undefined | ''): Record<string, NormalizedFieldMeta>;
-    /**
-     * 获取指定字段信息
-     * @param name - 字段名
-     */
-    get(name: string): NormalizedFieldMeta | null;
-    get(name?: string) {
-        if (name) {
-            return this._get(name);
-        } else {
-            return this.fieldsMeta;
-        }
-    }
-
     private _triggerFieldChange(name: string, value: unknown, oldValue: unknown, triggerType: WatchTriggerType) {
         // same value should not trigger change
         if (Object.is(value, oldValue)) {
@@ -1324,28 +1347,6 @@ class Field {
         for (const callback of listenerSet) {
             callback(name, value, oldValue, triggerType);
         }
-    }
-    /**
-     * 监听字段值变化
-     * @param names - 监听的 name 列表
-     * @param callback - 变化回调
-     * @returns 解除监听回调
-     */
-    watch(names: string[], callback: WatchCallback) {
-        for (const name of names) {
-            if (!this.listeners[name]) {
-                this.listeners[name] = new Set();
-            }
-            const set = this.listeners[name];
-            set.add(callback);
-        }
-        return () => {
-            for (const name of names) {
-                if (this.listeners[name]) {
-                    this.listeners[name].delete(callback);
-                }
-            }
-        };
     }
 
     private _triggerAfterValidateRerender(errorsGroup: ValidateErrorGroup | null) {
