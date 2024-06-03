@@ -136,32 +136,18 @@ class Field {
         Object.assign(this.options, options);
     }
 
-    init<ValueType = any, OtherProps extends object = object>(
-        name: string,
-        option?: InitOption<ValueType, never, never, OtherProps>,
-        rprops?: OtherProps
-    ): Omit<OtherProps, keyof InitResult<'value', 'onChange', ValueType>> & InitResult<'value', 'onChange', ValueType>;
-    init<
-        ValueType = any,
-        ValueName extends string = 'value',
-        Trigger extends string = 'onChange',
-        OtherProps extends object = object,
-    >(
-        name: string,
-        option?: InitOption<ValueType, ValueName, Trigger, OtherProps>,
-        rprops?: OtherProps
-    ): Omit<OtherProps, keyof InitResult<ValueName, Trigger, ValueType>> & InitResult<ValueName, Trigger, ValueType>;
     /**
      * 初始化一个字段项
      * @param name - 字段 key
      * @param option - 字段配置
      * @param rprops - 其它参数
      */
-    init<ValueType, ValueName extends string, Trigger extends string, OtherProps extends object>(
-        name: string,
-        option: InitOption<ValueType, ValueName, Trigger, OtherProps> = {},
-        rprops?: OtherProps
-    ) {
+    init<
+        ValueType,
+        ValueName extends string = 'value',
+        Trigger extends string = 'onChange',
+        OtherProps extends object = object,
+    >(name: string, option: InitOption<ValueType, ValueName, Trigger, OtherProps> = {}, rprops?: OtherProps) {
         const {
             id,
             initValue,
