@@ -143,7 +143,7 @@ class Field {
      * @param rprops - 其它参数
      */
     init<
-        ValueType,
+        ValueType = any,
         ValueName extends string = 'value',
         Trigger extends string = 'onChange',
         OtherProps extends object = object,
