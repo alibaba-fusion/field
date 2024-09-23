@@ -245,7 +245,7 @@ export function getValueFromEvent(e: unknown) {
 }
 
 function validateMap<Rule extends { trigger?: string | string[]; [key: string]: unknown }>(
-    rulesMap: Record<string, Omit<Rule, 'trigger'>[]>,
+    rulesMap: Record<string, Rule[]>,
     rule: Rule,
     defaultTrigger: string
 ) {
@@ -281,7 +281,7 @@ export function mapValidateRules<Rule extends { [key: string]: unknown; trigger?
     rules: Rule[],
     defaultTrigger: string
 ) {
-    const rulesMap: Record<string, Array<Omit<Rule, 'trigger'>>> = {};
+    const rulesMap: Record<string, Array<Rule>> = {};
 
     rules.forEach((rule) => {
         validateMap(rulesMap, rule, defaultTrigger);

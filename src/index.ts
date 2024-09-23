@@ -248,7 +248,7 @@ class Field {
                 : field.value,
         };
 
-        let rulesMap: Record<string, Omit<Rule, 'trigger'>[]> = {};
+        let rulesMap: Record<string, Rule[]> = {};
 
         if (this.options.autoValidate && autoValidate !== false) {
             // trigger map in rules,
@@ -1165,7 +1165,7 @@ class Field {
         }
     }
 
-    _validate(name: string, rule: Omit<Rule, 'trigger'>[], trigger: string) {
+    _validate(name: string, rule: Rule[], trigger: string) {
         const field = this._get(name);
         if (!field) {
             return;

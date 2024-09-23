@@ -1,6 +1,6 @@
 {
   "name": "@alifd/field",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Fields can be used to manage data when it comes to form data manipulation and validation. After being associated with a component, the form data can be automatically written back, read, and verified.",
   "files": [
     "demo/",
@@ -93,7 +93,7 @@
       "表单"
     ]
   },
-  "homepage": "https://unpkg.com/@alifd/field@2.0.2/build/index.html",
+  "homepage": "https://unpkg.com/@alifd/field@2.0.3/build/index.html",
   "bugs": "https://github.com/alibaba-fusion/field/issues",
   "publishConfig": {
     "access": "public",

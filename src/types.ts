@@ -130,7 +130,7 @@ export type Rule = {
     /**
      * 触发校验的事件名称
      */
-    trigger?: 'onChange' | 'onBlur' | string;
+    trigger?: string | string[];
 };
 
 export type InitOption<
