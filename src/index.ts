@@ -338,7 +338,7 @@ class Field {
      * @param reRender - 设置完成后是否重新渲染，默认为 true
      * @param triggerChange - 是否触发 watch change，默认为 true
      */
-    setValue(name: string, value: unknown, reRender = true, triggerChange = true) {
+    setValue<T = unknown>(name: string, value: T, reRender = true, triggerChange = true) {
         const oldValue = this.getValue(name);
         if (name in this.fieldsMeta) {
             this.fieldsMeta[name].value = value;

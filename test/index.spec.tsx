@@ -1,4 +1,14 @@
-import React, { useState, useMemo, Component, RefObject, createRef, forwardRef, useImperativeHandle } from 'react';
+import React, {
+    useState,
+    useMemo,
+    Component,
+    type RefObject,
+    createRef,
+    forwardRef,
+    useImperativeHandle,
+    PureComponent,
+    isValidElement,
+} from 'react';
 import { Input, Form } from '@alifd/next';
 import Field from '../src';
 
@@ -28,7 +38,7 @@ describe('field', () => {
 
     describe('render', () => {
         it('should support Form', () => {
-            class Demo extends React.Component {
+            class Demo extends Component {
                 field = new Field(this);
 
                 render() {
@@ -77,11 +87,11 @@ describe('field', () => {
         });
 
         it('should support React.createRef in Form', () => {
-            class Demo extends React.Component<{
+            class Demo extends Component<{
                 onClick: (ref: RefObject<any>) => void;
             }> {
                 field = new Field(this);
-                ref = React.createRef<any>();
+                ref = createRef<any>();
                 render() {
                     return (
                         <Form field={this.field}>
@@ -109,7 +119,7 @@ describe('field', () => {
         });
 
         it('should support PureComponent', () => {
-            class Demo extends React.PureComponent {
+            class Demo extends PureComponent {
                 field = new Field(this, { forceUpdate: true });
 
                 render() {
@@ -127,7 +137,7 @@ describe('field', () => {
         });
 
         it('should support origin input/checkbox/radio', () => {
-            class Demo extends React.Component {
+            class Demo extends Component {
                 field = new Field(this);
 
                 render() {
@@ -341,7 +351,7 @@ describe('field', () => {
         });
 
         it('should support control through `setState`', () => {
-            class Demo extends React.Component {
+            class Demo extends Component {
                 state = {
                     show: true,
                     inputValue: 'start',
@@ -370,7 +380,7 @@ describe('field', () => {
         });
 
         it('should support control through `setState` when `parseName` is true', () => {
-            class Demo extends React.Component {
+            class Demo extends Component {
                 state = {
                     show: true,
                     inputValue: 'start',
@@ -434,14 +444,14 @@ describe('field', () => {
         });
     });
 
-    describe('behaviour', () => {
+    describe('behavior', () => {
         it('getValue & getValues & setValue & setValues', () => {
             const field = new Field({});
             field.init('input', { initValue: 1 });
             field.init('input2', { initValue: 2 });
             field.init('input3.name', { initValue: 3 });
 
-            field.setValue('input', 2);
+            field.setValue<number>('input', 2);
             assert(field.getValue('input') === 2);
             assert(field.getValue('input3.name') === 3);
             assert(Object.keys(field.getValues()).length === 3);
@@ -524,7 +534,7 @@ describe('field', () => {
             assert(field.getError('input2')?.[0] === 'error 2');
 
             field.setError('input', <span>hello</span>);
-            assert(React.isValidElement(field.getError('input')?.[0]) === true);
+            assert(isValidElement(field.getError('input')?.[0]) === true);
         });
         it('getState', () => {
             const field = new Field({});
