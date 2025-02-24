@@ -434,6 +434,7 @@ class Field {
         } else {
             this.fieldsMeta[name] = {
                 errors: err,
+                name,
             };
         }
 
